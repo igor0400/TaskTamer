@@ -1,0 +1,61 @@
+version: '3'
+
+services:
+  # app:
+  #   build: ./
+
+  #   container_name: 'entservices'
+  #   image: entservices
+
+  #   ports:
+  #     - '8080:8080'
+
+  #   links:
+  #     # - redis:redis
+  #     - database:database
+
+  #   environment:
+  #     # - REDIS_HOST=redis
+  #     # - REDIS_PORT=6379
+  #     - MYSQL_HOST=database
+  #     - MYSQL_PORT=3306
+  #     - NODE_ENV=production
+
+  database:
+    container_name: 'database'
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_DATABASE: 'MainDatabase'
+      MYSQL_USER: 'MainUser'
+      MYSQL_PASSWORD: 'dkfjsdofnsofnmno5j84584nknvkIDJFIDOFJODS&&&***&(hjhdfkldf'
+      MYSQL_ROOT_PASSWORD: 'root'
+      LANG: C.UTF-8
+    ports:
+      - '3306:3306'
+    expose:
+      - '3306'
+    volumes:
+      - database:/var/lib/mysql
+    command:
+      [
+        'mysqld',
+        '--character-set-server=utf8mb4',
+        '--collation-server=utf8mb4_unicode_ci',
+      ]
+
+  # redis:
+  #   container_name: 'redis'
+  #   image: redis:latest
+
+  #   expose:
+  #     - 6379
+
+  #   volumes:
+  #     - 'D:/Progects/Ent/EntServices:/data'
+
+  #   command: ['redis-server', '--bind', 'redis', '--port', '6379']
+
+volumes:
+  database:
+    # driver: local
