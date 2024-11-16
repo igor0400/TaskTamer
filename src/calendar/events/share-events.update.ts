@@ -59,14 +59,14 @@ export class ShareEventsUpdate {
 
   @Action(/.*::accept_event_invite/)
   async acceptEventInviteBtn(ctx: Context) {
-    await this.middlewares.btnMiddleware(ctx, (ctx: Context) =>
+    await this.middlewares.btnUnfollowNewsMiddleware(ctx, (ctx: Context) =>
       this.shareEventsService.acceptEventInvite(ctx),
     );
   }
 
   @Action(/.*::reject_event_invite/)
   async rejectEventInviteBtn(ctx: Context) {
-    await this.middlewares.btnMiddleware(ctx, (ctx: Context) =>
+    await this.middlewares.btnUnfollowNewsMiddleware(ctx, (ctx: Context) =>
       this.shareEventsService.rejectEventInvite(ctx),
     );
   }

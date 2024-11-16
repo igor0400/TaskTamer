@@ -47,28 +47,31 @@ export class GeneralButtons {
 
   @Action('check_news_follow')
   async checkNewsFollowBtn(ctx: Context) {
-    await this.middlewares.btnMiddleware(ctx, async (ctx: Context) => {
-      const { message } = getCtxData(ctx);
+    await this.middlewares.btnUnfollowNewsMiddleware(
+      ctx,
+      async (ctx: Context) => {
+        const { message } = getCtxData(ctx);
 
-      const isBanner = Boolean(message?.caption);
+        const isBanner = Boolean(message?.caption);
 
-      const isFollowNews = await this.middlewares.chackIsFollowNews(ctx);
+        const isFollowNews = await this.middlewares.chackIsFollowNews(ctx);
 
-      if (isFollowNews) {
-        if (isBanner) {
-          await this.menuService.changeToMenu(ctx);
+        if (isFollowNews) {
+          if (isBanner) {
+            await this.menuService.changeToMenu(ctx);
+          } else {
+            try {
+              await ctx.deleteMessage();
+            } catch (e) {}
+
+            await this.menuService.sendMenu(ctx);
+          }
         } else {
           try {
-            await ctx.deleteMessage();
+            await ctx.answerCbQuery(`🚫 Вы не подписаны`, { show_alert: true });
           } catch (e) {}
-
-          await this.menuService.sendMenu(ctx);
         }
-      } else {
-        try {
-          await ctx.answerCbQuery(`🚫 Вы не подписаны`, { show_alert: true });
-        } catch (e) {}
-      }
-    });
+      },
+    );
   }
 }
