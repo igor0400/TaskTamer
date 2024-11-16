@@ -1,5 +1,5 @@
 import { CalendarEvent } from 'src/calendar/models/event.model';
-import { backBarInlineBtns, backInlineBtn, localBackInlineBtn } from '../../../general';
+import { backBarInlineBtns } from '../../../general';
 import { textMonths } from '../../configs';
 import { getZero } from 'src/libs/common';
 import { CalendarBusyDay } from 'src/calendar/models/busy-day.model';
@@ -17,7 +17,7 @@ export const calendarDaysMessage = (date: string) => {
 
   return `<b>События ${textDate}</b>
 
-📜 Здесь отображается список ваших событий. Нажмите на любое из них для подробной информации.
+Здесь отображается список ваших событий. Нажмите на любое из них для подробной информации.
 
 ℹ️ Вы можете отметить день недоступным для создания новых событий или поделится ссылкой на эту дату.`;
 };
@@ -48,7 +48,7 @@ export const calendarDaysMarkup = ({
           ),
         },
       ],
-      ...backBarInlineBtns(`${date}::back_to_calendar_month`)
+      ...backBarInlineBtns(`${date}::back_to_calendar_month`),
     ],
   };
 };

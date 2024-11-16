@@ -22,11 +22,11 @@ export class StartService {
   }
 
   async sendStartMessage(ctx: Context) {
-    await sendMessage('👋', {
-      ctx,
-      type: 'send',
-      isBanner: false,
-    });
+    // await sendMessage('👋', {
+    //   ctx,
+    //   type: 'send',
+    //   isBanner: false,
+    // });
     await this.menuService.sendMenu(ctx);
   }
 }

@@ -114,17 +114,12 @@ export class EventsService {
       const memberTgId = member.userTelegramId;
 
       if (creator.id !== memberId) {
-        try {
-          await this.bot.telegram.sendPhoto(
-            member?.user?.telegramId,
-            replyPhoto(),
-            {
-              caption: deletedEventMessage(member?.user, event),
-              reply_markup: deletedEventMarkup(),
-              parse_mode: 'HTML',
-            },
-          );
-        } catch (e) {}
+        sendMessage(deletedEventMessage(member?.user, event), {
+          bot: this.bot,
+          chatId: member?.user?.telegramId,
+          reply_markup: deletedEventMarkup(),
+          type: 'send',
+        });
       }
 
       await this.eventsMembersRepository.destroy({ where: { id: member.id } });
@@ -158,13 +153,12 @@ export class EventsService {
 
     const creator = await this.usersRepository.findByPk(event?.creatorId);
 
-    try {
-      await this.bot.telegram.sendPhoto(creator?.telegramId, replyPhoto(), {
-        caption: leavedEventMessage(user),
-        reply_markup: leavedEventMarkup(event.id),
-        parse_mode: 'HTML',
-      });
-    } catch (e) {}
+    sendMessage(leavedEventMessage(user), {
+      bot: this.bot,
+      chatId: creator?.telegramId,
+      reply_markup: leavedEventMarkup(event.id),
+      type: 'send',
+    });
 
     return event;
   }
@@ -233,16 +227,12 @@ export class EventsService {
     });
     const type = userId === event?.creatorId ? 'owner' : 'inviter';
 
-    await this.bot.telegram.editMessageCaption(
+    await sendMessage(eventMessage(event), {
+      bot: this.bot,
       chatId,
-      +messageId,
-      undefined,
-      eventMessage(event),
-      {
-        reply_markup: eventMarkup(event, type, userId),
-        parse_mode: 'HTML',
-      },
-    );
+      messageId: +messageId,
+      reply_markup: eventMarkup(event, type, userId),
+    });
   }
 
   async createEventByTitleListener({

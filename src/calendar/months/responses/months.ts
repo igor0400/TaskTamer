@@ -1,16 +1,10 @@
 import { CalendarBusyDay } from 'src/calendar/models/busy-day.model';
-import {
-  backBarInlineBtns,
-  backInlineBtn,
-  localBackInlineBtn,
-} from '../../../general';
+import { backInlineBtn } from '../../../general';
 import { formatKeyboard, getNowDate, getZero } from 'src/libs/common';
 import { getEmptyBtns } from '../../assets';
 import { months, weekDays } from '../../configs';
 
 export const calendarMonthsMessage = () => `<b>Календарь встреч/событий</b>
-
-🗓 Календарь – это сервис для удобного планирования встреч и событий.
 
 👇 Вы можете поделиться ссылкой на свой календарь и вам не придется обсуждать время встречи, так как человек выберет его сам, основываясь на вашем графике.
 
@@ -102,7 +96,7 @@ export const calendarMonthsMarkup = (
           ),
         },
       ],
-      ...backBarInlineBtns('back_to_services'),
+      backInlineBtn,
     ],
   };
 };

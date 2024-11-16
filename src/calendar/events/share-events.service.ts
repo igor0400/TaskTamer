@@ -109,13 +109,14 @@ export class ShareEventsService {
     );
 
     try {
-      await this.bot.telegram.sendPhoto(invitedUserTgId, replyPhoto(), {
-        caption: eventInviteMessage(event, owner),
+      sendMessage(eventInviteMessage(event, owner), {
+        bot: this.bot,
+        chatId: invitedUserTgId,
         reply_markup: eventInviteMarkup(event.id),
-        parse_mode: 'HTML',
+        type: 'send',
       });
 
-      await this.basicNotificationRepository.create({
+      this.basicNotificationRepository.create({
         userTelegramId: invitedUserTgId,
         title: 'Приглашение',
         text: eventInviteMessage(event, owner),
@@ -158,13 +159,12 @@ export class ShareEventsService {
 
     const creator = await this.usersRepository.findByPk(event?.creatorId);
 
-    try {
-      await this.bot.telegram.sendPhoto(creator?.telegramId, replyPhoto(), {
-        caption: eventAcceptedMessage(user),
-        reply_markup: eventAcceptedMarkup(eventId),
-        parse_mode: 'HTML',
-      });
-    } catch (e) {}
+    sendMessage(eventAcceptedMessage(user), {
+      bot: this.bot,
+      chatId: creator?.telegramId,
+      reply_markup: eventAcceptedMarkup(eventId),
+      type: 'send',
+    });
 
     await this.basicNotificationRepository.destroy({
       where: { userTelegramId: userTgId },
@@ -182,13 +182,12 @@ export class ShareEventsService {
 
     const creator = await this.usersRepository.findByPk(event?.creatorId);
 
-    try {
-      await this.bot.telegram.sendPhoto(creator?.telegramId, replyPhoto(), {
-        caption: eventRejectedMessage(user),
-        reply_markup: eventRejectedMarkup(eventId),
-        parse_mode: 'HTML',
-      });
-    } catch (e) {}
+    sendMessage(eventRejectedMessage(user), {
+      bot: this.bot,
+      chatId: creator?.telegramId,
+      reply_markup: eventRejectedMarkup(eventId),
+      type: 'send',
+    });
 
     await this.basicNotificationRepository.destroy({
       where: { userTelegramId: userTgId },
