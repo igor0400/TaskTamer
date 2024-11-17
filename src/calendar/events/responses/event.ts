@@ -7,6 +7,7 @@ import {
   localBackInlineBtn,
 } from 'src/general';
 import { getEventTexts } from '../assets';
+import { getNowDate } from 'src/libs/common';
 
 export const eventMessage = (event: CalendarEvent) => {
   const { title, textDate, textStart, textEnd, textMembers } =
@@ -50,6 +51,18 @@ export const eventMarkup = (
     ? `${getDayDate(startDate)}_${inviterId}::back_to_share_calendar_date`
     : `${getDayDate(startDate)}::back_to_calendar_date`;
 
+  const notification =
+    getNowDate(1) < new Date(event.startTime)
+      ? [
+          [
+            {
+              text: '🔔 Напоминание',
+              callback_data: `${event.id}::calendar_event_notification`,
+            },
+          ],
+        ]
+      : [];
+
   return {
     inline_keyboard: [
       [
@@ -60,6 +73,7 @@ export const eventMarkup = (
           )}`,
         },
       ],
+      ...notification,
       deleteBtn,
       ...backBarInlineBtns(backDateBtnData),
     ],

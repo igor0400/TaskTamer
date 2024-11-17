@@ -1,9 +1,9 @@
 import { backBarInlineBtns } from 'src/general';
 import { BasicNotification } from '../models/basic-notification.model';
 
-export const basicNotificationsMessage = (isFull = false) => `<b>Уведомления</b>
+export const basicNotificationsMessage = () => `<b>Уведомления</b>
 
-${isFull ? '📬' : '📭'} Список уведомлений которые требуют действия:`;
+Список уведомлений которые требуют действия:`;
 
 export const basicNotificationsMarkup = (
   notifications: BasicNotification[],
@@ -22,7 +22,7 @@ export const basicNotificationsMarkup = (
   if (!notificationsBtns.length) {
     notificationsBtns.push([
       {
-        text: '🤷‍♂️ Список пуст',
+        text: '📭 Список пуст',
         callback_data: 'empty_notifications',
       },
     ]);

@@ -54,6 +54,8 @@ export class EventsAdditionalService {
     const creatorTgId = ctxUser.id;
     const creator = await this.userRepository.findByTgId(creatorTgId);
 
+    console.log({ options, user, userTgId, creator });
+
     const userId = options?.userId ?? creator.id;
 
     const eventsMembers = await this.eventsMembersRepository.findAll({
@@ -169,8 +171,8 @@ export class EventsAdditionalService {
       { ...options, userId },
       async (conf: Omit<CreatePaginationProps, 'userTelegramId'>) => {
         return await this.paginationService.create({
-          userId,
           ...conf,
+          userId: creator.id,
         });
       },
     );

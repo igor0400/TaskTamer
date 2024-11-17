@@ -53,7 +53,7 @@ function getEventsBtns(
 
   if (events.length === 0) {
     eventsBtns.push([
-      { text: '📋 Список пуст', callback_data: 'empty_calendar_day_events' },
+      { text: 'Список пуст', callback_data: 'empty_calendar_day_events' },
     ]);
   } else {
     for (let event of events) {

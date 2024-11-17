@@ -22,9 +22,8 @@ export class NotificationsService {
         userTelegramId: userTgId,
       },
     });
-    const isFull = Boolean(notifications.length);
 
-    await sendMessage(basicNotificationsMessage(isFull), {
+    await sendMessage(basicNotificationsMessage(), {
       ctx,
       reply_markup: basicNotificationsMarkup(notifications),
     });
@@ -42,4 +41,6 @@ export class NotificationsService {
         : undefined,
     });
   }
+
+  async changeToCalendarNotification(ctx: Context) {}
 }

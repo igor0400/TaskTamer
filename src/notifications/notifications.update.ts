@@ -26,4 +26,11 @@ export class NotificationsUpdate {
       this.notificationsService.changeToBasicNotification(ctx, dataValue),
     );
   }
+
+  @Action(/.*::calendar_event_notification/)
+  async calendarEventNotificationBtn(ctx: Context) {
+    await this.middlewares.btnMiddleware(ctx, (ctx: Context) =>
+      this.notificationsService.changeToCalendarNotification(ctx),
+    );
+  }
 }

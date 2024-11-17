@@ -7,3 +7,7 @@ async function bootstrap() {
   await app.listen(PORT, () => console.log(`Server started on port: ${PORT}`));
 }
 bootstrap();
+
+// доделать уведомления о сбытиях
+
+// при обновлении часового пояса сдвигать все время у задач
