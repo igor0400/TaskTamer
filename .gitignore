@@ -5,6 +5,8 @@
 dump.rdb
 *.env
 
+/config
+
 session_db.json
 
 # Logs
