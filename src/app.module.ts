@@ -20,6 +20,7 @@ import { RolesModule } from './roles/roles.module';
 import { MailingsModule } from './mailings/mailings.module';
 import { PaginationModule } from './libs/pagination/pagination.module';
 import { FilesModule } from './files/files.module';
+import { TimezoneModule } from './timezone/timezone.module';
 
 @Module({
   imports: [
@@ -51,6 +52,7 @@ import { FilesModule } from './files/files.module';
     RolesModule,
     MailingsModule,
     FilesModule,
+    TimezoneModule,
 
     ListenersLowModule,
   ],

@@ -34,6 +34,14 @@ export class GeneralButtons {
     });
   }
 
+  @Action('close_to_menu')
+  async closeToMenuBtn(ctx: Context) {
+    await this.middlewares.btnMiddleware(ctx, async (ctx: Context) => {
+      await ctx.deleteMessage();
+      this.menuService.sendMenu(ctx);
+    });
+  }
+
   @Action('latter')
   async latterBtn(ctx: Context) {
     await this.middlewares.btnMiddleware(ctx, async (ctx: Context) => {

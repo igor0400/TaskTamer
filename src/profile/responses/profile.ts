@@ -5,7 +5,8 @@ import { User } from 'src/users/models/user.model';
 export const profileMessage = (user: User) => `<b>Профиль</b>
 
 🎓 Вы: ${getUserName(user)}
-🔢 Ваш ID: <code>${user.telegramId}</code>`;
+🔢 Ваш ID: <code>${user.telegramId}</code>
+🕑 Часовой пояс: <code>UTC(${user.timezone})</code>`;
 
 export const profileMarkup = (userId: string, isFull = false) => ({
   inline_keyboard: [
@@ -14,6 +15,12 @@ export const profileMarkup = (userId: string, isFull = false) => ({
       {
         text: `${isFull ? '📬' : '📭'} Уведомления`,
         callback_data: 'user_notifications',
+      },
+    ],
+    [
+      {
+        text: `Изменить часовой пояс`,
+        callback_data: 'change_user_timezone',
       },
     ],
     backInlineBtn,

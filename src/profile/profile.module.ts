@@ -8,5 +8,6 @@ import { NotificationsModule } from 'src/notifications/notifications.module';
 @Module({
   imports: [forwardRef(() => GeneralModule), UsersModule, NotificationsModule],
   providers: [ProfileService, ProfileUpdate],
+  exports: [ProfileService],
 })
 export class ProfileModule {}

@@ -1,7 +1,11 @@
 import { CalendarBusyDay } from 'src/calendar/models/busy-day.model';
 import { backInlineBtn } from '../../../general';
-import { formatKeyboard, getNowDate, getZero } from 'src/libs/common';
-import { getEmptyBtns } from '../../assets';
+import {
+  formatKeyboard,
+  getEmptyBtns,
+  getNowDate,
+  getZero,
+} from 'src/libs/common';
 import { months, weekDays } from '../../configs';
 
 export const calendarMonthsMessage = () => `<b>Календарь встреч/событий</b>

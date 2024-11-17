@@ -36,7 +36,8 @@
     "sequelize": "^6.35.0",
     "sequelize-typescript": "^2.1.5",
     "telegraf": "^4.15.0",
-    "telegraf-session-local": "^2.1.1"
+    "telegraf-session-local": "^2.1.1",
+    "tz-lookup": "^6.1.25"
   },
   "devDependencies": {
     "@nestjs/cli": "^9.0.0",

@@ -23,6 +23,10 @@ module.exports = {
       userName: {
         type: Sequelize.STRING(100),
       },
+      timezone: {
+        type: Sequelize.STRING(5),
+        defaultValue: '+3',
+      },
       createdAt: {
         type: Sequelize.DATE,
         defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),

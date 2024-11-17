@@ -7,6 +7,7 @@ export interface UserCreationArgs {
   firstName: string;
   lastName: string;
   userName: string;
+  timezone?: string;
 }
 
 @Table({ tableName: 'Users' })
@@ -31,6 +32,12 @@ export class User extends AbstractModel<User, UserCreationArgs> {
     type: DataType.STRING,
   })
   userName: string;
+
+  @Column({
+    type: DataType.STRING,
+    defaultValue: '+3',
+  })
+  timezone: string;
 
   @HasMany(() => UserRoles)
   roles: UserRoles[];
