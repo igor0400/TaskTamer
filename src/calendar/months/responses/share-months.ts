@@ -18,7 +18,7 @@ export const shareCalendarMonthsMessage = (
   user,
 )}, выберите удобную для вас дату.
 
-<i>❌ – день недоступен</i>`;
+<i>Дни, помеченные значком «❌» являются недоступными.</i>`;
 
 export const shareCalendarMonthsMarkup = (
   userId: string,
