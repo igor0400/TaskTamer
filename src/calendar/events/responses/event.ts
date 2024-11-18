@@ -1,11 +1,6 @@
 import { textMonths } from 'src/calendar/configs';
 import { CalendarEvent } from 'src/calendar/models/event.model';
-import {
-  backBarInlineBtns,
-  backInlineBtn,
-  getDayDate,
-  localBackInlineBtn,
-} from 'src/general';
+import { backBarInlineBtns, getDayDate } from 'src/general';
 import { getEventTexts } from '../assets';
 import { getNowDate } from 'src/libs/common';
 
@@ -57,7 +52,7 @@ export const eventMarkup = (
           [
             {
               text: '🔔 Напоминание',
-              callback_data: `${event.id}::calendar_event_notification`,
+              callback_data: `${event.id}::notifi_to_calendar_event`,
             },
           ],
         ]

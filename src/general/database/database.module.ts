@@ -12,6 +12,7 @@ import { MailingQueueItem } from 'src/mailings/models/mailing-queue-item.model';
 import { MailingTemplate } from 'src/mailings/models/mailing-template.model';
 import { Mailing } from 'src/mailings/models/mailing.model';
 import { BasicNotification } from 'src/notifications/models/basic-notification.model';
+import { NoiseNotification } from 'src/notifications/models/noise-notification.model';
 import { UserRoles } from 'src/roles/models/user-roles.model';
 import { User } from 'src/users/models/user.model';
 
@@ -27,6 +28,7 @@ import { User } from 'src/users/models/user.model';
       Pagination,
       BanUser,
       BasicNotification,
+      NoiseNotification,
       Chain,
       ChainField,
       Mailing,

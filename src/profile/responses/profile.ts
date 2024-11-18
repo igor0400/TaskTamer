@@ -1,4 +1,4 @@
-import { backInlineBtn } from 'src/general';
+import { localBackInlineBtn } from 'src/general';
 import { getUserName } from 'src/libs/common';
 import { User } from 'src/users/models/user.model';
 
@@ -23,6 +23,6 @@ export const profileMarkup = (userId: string, isFull = false) => ({
         callback_data: 'change_user_timezone',
       },
     ],
-    backInlineBtn,
+    localBackInlineBtn('back'),
   ],
 });

@@ -26,6 +26,7 @@ import { ShareEventsUpdate } from './events/share-events.update';
 import { ShareEventsAdditionalService } from './events/share-events-additional.service';
 import { NotificationsModule } from 'src/notifications/notifications.module';
 import { PaginationModule } from 'src/libs/pagination/pagination.module';
+import { MenuModule } from 'src/menu/menu.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { PaginationModule } from 'src/libs/pagination/pagination.module';
     forwardRef(() => PaginationModule),
     forwardRef(() => GeneralModule),
     forwardRef(() => ListenersModule),
+    forwardRef(() => MenuModule),
   ],
   providers: [
     CalendarMonthsService,

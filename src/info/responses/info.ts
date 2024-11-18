@@ -1,4 +1,4 @@
-import { backInlineBtn } from '../../general';
+import { localBackInlineBtn } from '../../general';
 
 export const infoMessage =
   () => `<b>TaTa — это удобный менеджер задач и совместных встреч</b>, в котором собраны самые необходимые функции для комфортной работы.
@@ -14,6 +14,6 @@ export const infoMarkup = {
       { text: '📨 Наш канал', url: 'https://t.me/EntServicesNews' },
     ],
     [{ text: '💻 Администратор', url: `https://t.me/ul1dev` }],
-    backInlineBtn,
+    localBackInlineBtn('back'),
   ],
 };

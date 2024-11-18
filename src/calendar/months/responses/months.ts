@@ -1,5 +1,5 @@
 import { CalendarBusyDay } from 'src/calendar/models/busy-day.model';
-import { backInlineBtn } from '../../../general';
+import { backInlineBtn, localBackInlineBtn } from '../../../general';
 import {
   formatKeyboard,
   getEmptyBtns,
@@ -99,7 +99,7 @@ export const calendarMonthsMarkup = (
           ),
         },
       ],
-      backInlineBtn,
+      localBackInlineBtn('back'),
     ],
   };
 };

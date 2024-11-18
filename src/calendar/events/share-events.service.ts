@@ -20,13 +20,13 @@ import { EventsService } from './events.service';
 import {
   getCtxData,
   getUserName,
-  replyPhoto,
   sendTempChatIdMessage,
 } from 'src/libs/common';
 import { EventsMembersRepository } from '../repositories/event-member.repository';
 import { backMarkup, getDayDate, sendMessage } from 'src/general';
 import { BasicNotificationRepository } from 'src/notifications/repositories/basic-notification.repository';
 import { Waiter } from 'src/listeners/models/waiter.model';
+import { MenuService } from 'src/menu/menu.service';
 
 @Injectable()
 export class ShareEventsService {
@@ -36,6 +36,7 @@ export class ShareEventsService {
     private readonly eventsMembersRepository: EventsMembersRepository,
     private readonly usersRepository: UserRepository,
     private readonly basicNotificationRepository: BasicNotificationRepository,
+    private readonly menuService: MenuService,
     @InjectBot() private bot: Telegraf<Context>,
   ) {}
 
@@ -192,6 +193,8 @@ export class ShareEventsService {
     await this.basicNotificationRepository.destroy({
       where: { userTelegramId: userTgId },
     });
+
+    await this.menuService.sendMenu(ctx);
   }
 
   async sendInviteEvent(ctx: Context, eventId: string, userId: string) {

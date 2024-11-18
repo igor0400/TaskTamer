@@ -27,7 +27,7 @@ export class NotificationsUpdate {
     );
   }
 
-  @Action(/.*::calendar_event_notification/)
+  @Action(/.*::notifi_to_calendar_event/)
   async calendarEventNotificationBtn(ctx: Context) {
     await this.middlewares.btnMiddleware(ctx, (ctx: Context) =>
       this.notificationsService.changeToCalendarNotification(ctx),
