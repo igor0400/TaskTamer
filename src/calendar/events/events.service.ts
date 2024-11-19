@@ -212,7 +212,12 @@ export class EventsService {
 
     await sendMessage(eventMessage(event), {
       ctx,
-      reply_markup: eventMarkup(event, type, user.id),
+      reply_markup: eventMarkup({
+        event,
+        type,
+        userId: user.id,
+        timezone: user.timezone,
+      }),
     });
   }
 
@@ -227,11 +232,18 @@ export class EventsService {
     });
     const type = userId === event?.creatorId ? 'owner' : 'inviter';
 
+    const user = await this.usersRepository.findByPk(userId);
+
     await sendMessage(eventMessage(event), {
       bot: this.bot,
       chatId,
       messageId: +messageId,
-      reply_markup: eventMarkup(event, type, userId),
+      reply_markup: eventMarkup({
+        event,
+        type,
+        userId: user.id,
+        timezone: user.timezone,
+      }),
     });
   }
 

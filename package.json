@@ -24,6 +24,7 @@
     "@nestjs/config": "^3.1.1",
     "@nestjs/core": "^9.0.0",
     "@nestjs/platform-express": "^9.0.0",
+    "@nestjs/schedule": "^4.1.1",
     "@nestjs/sequelize": "^10.0.0",
     "cheerio": "^1.0.0",
     "cross-env": "^7.0.3",

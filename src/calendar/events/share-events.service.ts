@@ -51,7 +51,13 @@ export class ShareEventsService {
 
     await sendMessage(eventMessage(event), {
       ctx,
-      reply_markup: eventMarkup(event, 'owner', user.id, inviterId),
+      reply_markup: eventMarkup({
+        event,
+        type: 'owner',
+        userId: user.id,
+        inviterId,
+        timezone: user.timezone,
+      }),
     });
   }
 
@@ -62,6 +68,8 @@ export class ShareEventsService {
     userId: string,
     inviterId: string,
   ) {
+    const user = await this.usersRepository.findByPk(userId);
+
     const event = await this.eventsRepository.findByPk(eventId, {
       include: [{ model: CalendarEventMember, include: [User] }],
     });
@@ -70,7 +78,13 @@ export class ShareEventsService {
       bot: this.bot,
       chatId,
       messageId: +messageId,
-      reply_markup: eventMarkup(event, 'owner', userId, inviterId),
+      reply_markup: eventMarkup({
+        event,
+        type: 'owner',
+        userId,
+        inviterId,
+        timezone: user.timezone,
+      }),
     });
   }
 

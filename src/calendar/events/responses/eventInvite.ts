@@ -14,11 +14,11 @@ export const eventInviteMessage = (event: CalendarEvent, owner: User) => {
     title === 'Событие' ? '' : `<b>"${title}"</b>`
   }
 
-🗓 <b>Дата:</b> <code>${textDate}</code>
-🕗 <b>Начало:</b> <code>${textStart}</code>
-🕔 <b>Конец:</b> <code>${textEnd}</code>
+<b>Дата начала:</b> <code>${textDate}</code>
+<b>Время начала:</b> <code>${textStart}</code>
+<b>Время окончания:</b> <code>${textEnd}</code>
 
-👥 <b>Участники:</b> ${textMembers}`;
+<b>Участники события</b>: ${textMembers}`;
 };
 
 export const eventInviteMarkup = (eventId: string, userId?: string) => {

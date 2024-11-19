@@ -2,27 +2,34 @@ import { textMonths } from 'src/calendar/configs';
 import { CalendarEvent } from 'src/calendar/models/event.model';
 import { backBarInlineBtns, getDayDate } from 'src/general';
 import { getEventTexts } from '../assets';
-import { getNowDate } from 'src/libs/common';
+import { getNowDateWithTZ } from 'src/libs/common';
 
 export const eventMessage = (event: CalendarEvent) => {
   const { title, textDate, textStart, textEnd, textMembers } =
     getEventTexts(event);
 
-  return `<b>${title}</b>
+  return `<b>Событие — ${title}</b>
 
-🗓 <b>Дата:</b> <code>${textDate}</code>
-🕗 <b>Начало:</b> <code>${textStart}</code>
-🕔 <b>Конец:</b> <code>${textEnd}</code>
+<b>Дата начала:</b> <code>${textDate}</code>
+<b>Время начала:</b> <code>${textStart}</code>
+<b>Время окончания:</b> <code>${textEnd}</code>
 
-👥 <b>Участники:</b> ${textMembers}`;
+<b>Участники события</b>: ${textMembers}`;
 };
 
-export const eventMarkup = (
-  event: CalendarEvent,
-  type: 'owner' | 'inviter' = 'owner',
-  userId: string,
-  inviterId?: string,
-) => {
+export const eventMarkup = ({
+  event,
+  type = 'owner',
+  userId,
+  timezone,
+  inviterId,
+}: {
+  event: CalendarEvent;
+  type: 'owner' | 'inviter';
+  userId: string;
+  timezone: string;
+  inviterId?: string;
+}) => {
   const startDate = new Date(event?.startTime);
   const textDate = `${startDate.getUTCDate()} ${
     textMonths[startDate.getUTCMonth()]
@@ -47,7 +54,14 @@ export const eventMarkup = (
     : `${getDayDate(startDate)}::back_to_calendar_date`;
 
   const notification =
-    getNowDate(1) < new Date(event.startTime)
+    getNowDateWithTZ({
+      timezone,
+      incHours: 1,
+    }) <
+    getNowDateWithTZ({
+      timezone,
+      initDate: event.startTime,
+    })
       ? [
           [
             {

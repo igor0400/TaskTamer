@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { getCtxData } from 'src/libs/common';
-import { Context } from 'telegraf';
+import { Context, Telegraf } from 'telegraf';
 import {
   basicNotificationsMarkup,
   basicNotificationsMessage,
@@ -18,6 +18,8 @@ import { NoiseNotificationRepository } from './repositories/noise-notification.r
 import { UserRepository } from 'src/users/repositories/user.repository';
 import { EventsRepository } from 'src/calendar/repositories/event.repository';
 import { EventsService } from 'src/calendar/events/events.service';
+import { Cron } from '@nestjs/schedule';
+import { InjectBot } from 'nestjs-telegraf';
 
 @Injectable()
 export class NotificationsService {
@@ -27,6 +29,7 @@ export class NotificationsService {
     private readonly eventsRepository: EventsRepository,
     private readonly eventsService: EventsService,
     private readonly userRepository: UserRepository,
+    @InjectBot() private bot: Telegraf<Context>,
   ) {}
 
   async changeToBasicNotifications(ctx: Context) {
@@ -180,14 +183,40 @@ export class NotificationsService {
 
     const event = await this.eventsRepository.findByPk(eventId);
 
+    const sendTime = new Date(event.startTime);
+
+    sendTime.setUTCHours(sendTime.getUTCHours() + Number(addHours));
+
     return this.noiseNotificationRepository.create({
       userId: user.id,
       type: `event_${eventId}`,
       title: 'Напоминание',
       text: noiseNotificationMessage({ event, addHours }),
-      sendTime: new Date(),
+      sendTime,
       extraData: addHours,
       markup: JSON.stringify(noiseNotificationMarkup(eventId)),
     });
+  }
+
+  @Cron('*/5 * * * *')
+  async checkNotificationsToSend() {
+    const allNotifications = await this.noiseNotificationRepository.findAll({});
+
+    for (let notification of allNotifications) {
+      if (
+        new Date(new Date().toUTCString().replace('GMT', '')) >=
+        new Date(notification.sendTime)
+      ) {
+        const user = await this.userRepository.findByPk(notification.userId);
+
+        await sendMessage(notification.text, {
+          bot: this.bot,
+          type: 'send',
+          isBanner: false,
+          chatId: user.telegramId,
+          reply_markup: JSON.parse(notification.markup),
+        });
+      }
+    }
   }
 }

@@ -11,9 +11,9 @@ export const deletedEventMessage = (user: User, event: CalendarEvent) => {
 
 🗑 ${getUserName(user)} удалил событие <b>"${title}"</b>
 
-🗓 <b>Дата:</b> <code>${textDate}</code>
-🕗 <b>Начало:</b> <code>${textStart}</code>
-🕔 <b>Конец:</b> <code>${textEnd}</code>`;
+<b>Дата начала:</b> <code>${textDate}</code>
+<b>Время начала:</b> <code>${textStart}</code>
+<b>Время окончания:</b> <code>${textEnd}</code>`;
 };
 
 export const deletedEventMarkup = () => ({

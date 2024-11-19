@@ -1,9 +1,12 @@
 import { backBarInlineBtns } from 'src/general';
+import { getSendTimeText } from '../assets';
 
 export const eventNotificationPageMessage = ({ event, notifi }) =>
   `<b>Напоминание о событии — ${event?.title}</b>
 
-Вам придёт сообщение с напоминанием, <u>за timeOfNotifi ${notifi.extraData}</u>`;
+Вам придёт сообщение с напоминанием, <u>${getSendTimeText(
+    notifi.extraData,
+  )}</u>`;
 
 export const eventNotificationPageMarkup = (eventId: string) => ({
   inline_keyboard: [
@@ -22,6 +25,3 @@ export const eventNotificationPageMarkup = (eventId: string) => ({
     ...backBarInlineBtns(`${eventId}::back_to_calendar_event`),
   ],
 });
-
-// сделать форматирование времени и цикл с напоминанием
-// исправить все ебань с TZ
