@@ -33,4 +33,32 @@ export class NotificationsUpdate {
       this.notificationsService.changeToCalendarNotification(ctx),
     );
   }
+
+  @Action(/.*::set_event_notifi/)
+  async setEventNotifiBtn(ctx: Context) {
+    await this.middlewares.btnMiddleware(ctx, (ctx: Context) =>
+      this.notificationsService.setEventNotification(ctx),
+    );
+  }
+
+  @Action(/.*::start_change_notifi_event_time/)
+  async startChangeNotifiEventTimeBtn(ctx: Context) {
+    await this.middlewares.btnMiddleware(ctx, (ctx: Context) =>
+      this.notificationsService.startChangeEventNotification(ctx),
+    );
+  }
+
+  @Action(/.*::change_notifi_event_time/)
+  async changNotifiEventTimeBtn(ctx: Context) {
+    await this.middlewares.btnMiddleware(ctx, (ctx: Context) =>
+      this.notificationsService.changeEventNotification(ctx),
+    );
+  }
+
+  @Action(/.*::delete_notifi_event_time/)
+  async deleteNotifiEventTimeBtn(ctx: Context) {
+    await this.middlewares.btnMiddleware(ctx, (ctx: Context) =>
+      this.notificationsService.deleteEventNotification(ctx),
+    );
+  }
 }

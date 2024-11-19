@@ -67,6 +67,7 @@ import { MenuModule } from 'src/menu/menu.module';
     EventsService,
     ShareCalendarService,
     ShareEventsService,
+    EventsRepository,
   ],
 })
 export class CalendarModule {}
