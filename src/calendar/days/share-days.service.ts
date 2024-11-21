@@ -8,6 +8,7 @@ import { getDateFromDataVal } from '../assets';
 import { filterEventsByDate } from '../events/assets';
 import { UserRepository } from 'src/users/repositories/user.repository';
 import { sendMessage } from 'src/general';
+import { getCtxData } from 'src/libs/common';
 
 @Injectable()
 export class ShareCalendarDaysService {
@@ -19,7 +20,7 @@ export class ShareCalendarDaysService {
 
   async sendCalendarDay(ctx: Context, date: string, userId: string) {
     const user = await this.usersRepository.findByPk(userId);
-    const markupData = await this.getMarkupData(date, userId);
+    const markupData = await this.getMarkupData(date, userId, ctx);
 
     await sendMessage(shareCalendarDaysMessage(date, user), {
       ctx,
@@ -30,7 +31,7 @@ export class ShareCalendarDaysService {
 
   async changeToCalendarDay(ctx: Context, date: string, userId: string) {
     const user = await this.usersRepository.findByPk(userId);
-    const markupData = await this.getMarkupData(date, userId);
+    const markupData = await this.getMarkupData(date, userId, ctx);
 
     await sendMessage(shareCalendarDaysMessage(date, user), {
       ctx,
@@ -38,7 +39,10 @@ export class ShareCalendarDaysService {
     });
   }
 
-  private async getMarkupData(dateVal: string, userId: string) {
+  private async getMarkupData(dateVal: string, userId: string, ctx: Context) {
+    const { ctxUser } = getCtxData(ctx);
+    const user = await this.usersRepository.findByTgId(ctxUser.id);
+
     const eventMembers = await this.eventsMembersRepository.findAll({
       where: {
         userId,
@@ -62,6 +66,7 @@ export class ShareCalendarDaysService {
       userId,
       events: sortedEvents,
       busyDay,
+      timezone: user.timezone,
     };
   }
 }

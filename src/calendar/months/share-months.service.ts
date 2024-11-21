@@ -50,7 +50,12 @@ export class ShareCalendarMonthsService {
 
     await sendMessage(shareCalendarMonthsMessage(user), {
       ctx,
-      reply_markup: shareCalendarMonthsMarkup(user?.id, busyDays, incMonth),
+      reply_markup: shareCalendarMonthsMarkup(
+        user?.id,
+        busyDays,
+        incMonth,
+        user.timezone,
+      ),
       type: isSend ? 'send' : 'edit',
     });
   }

@@ -7,7 +7,12 @@ import { getDateFromDataVal, getFreeIntervals } from '../assets';
 import { CalendarEvent } from '../models/event.model';
 import { filterEventsByDate } from './assets';
 import { Context, Telegraf } from 'telegraf';
-import { getCtxData, getZero, replyPhoto } from 'src/libs/common';
+import {
+  getCtxData,
+  getDateFromTZToUTC,
+  getNowDateWithTZ,
+  getZero,
+} from 'src/libs/common';
 import {
   deletedEventMarkup,
   deletedEventMessage,
@@ -26,8 +31,8 @@ interface CreateEvent {
   creatorTgId: string;
   membersTgIds: string[];
   title?: string;
-  startTime: string;
-  endTime: string;
+  startTime: Date;
+  endTime: Date;
 }
 
 interface CheckIsDayBusy {
@@ -57,19 +62,30 @@ export class EventsService {
 
     const creator = await this.usersRepository.findByTgId(creatorTgId);
 
+    const UTCStartTime = getDateFromTZToUTC({
+      initDate: startTime,
+      timezone: creator.timezone,
+    });
+
+    const UTCEndTime = getDateFromTZToUTC({
+      initDate: endTime,
+      timezone: creator.timezone,
+    });
+
     const event = await this.eventsRepository.create({
       title,
-      startTime,
-      endTime,
+      startTime: UTCStartTime,
+      endTime: UTCEndTime,
       type,
       creatorId: creator.id,
     });
 
     const dates = [];
-    const fromDate = getDayDate(startTime);
 
+    const fromDate = getDayDate(UTCStartTime);
     if (!dates.includes(fromDate)) dates.push(fromDate);
-    const tillDate = getDayDate(endTime);
+
+    const tillDate = getDayDate(UTCEndTime);
     if (!dates.includes(tillDate)) dates.push(tillDate);
 
     for (let memberTgId of membersTgIds) {
@@ -143,7 +159,10 @@ export class EventsService {
     });
     const user = await this.usersRepository.findByTgId(userTgId);
 
-    const startDate = new Date(event.startTime);
+    const startDate = getNowDateWithTZ({
+      initDate: event.startTime,
+      timezone: user.timezone,
+    });
 
     await this.checkIsDayBusy({
       userId: user.id,
@@ -178,12 +197,12 @@ export class EventsService {
     const [date, startVal, endVal] = timeData.split('-');
 
     const [day, month, year] = date.split('.');
-    const startTime = `${year}-${getZero(month)}-${getZero(
-      day,
-    )}T${startVal}:00.000Z`;
-    const endTime = `${year}-${getZero(month)}-${getZero(
-      day,
-    )}T${endVal}:00.000Z`;
+    const startTime = new Date(
+      `${year}-${getZero(month)}-${getZero(day)}T${startVal}:00.000Z`,
+    );
+    const endTime = new Date(
+      `${year}-${getZero(month)}-${getZero(day)}T${endVal}:00.000Z`,
+    );
 
     const event = await this.createEvent({
       creatorTgId,
@@ -210,7 +229,7 @@ export class EventsService {
 
     const type = user?.id === event?.creatorId ? 'owner' : 'inviter';
 
-    await sendMessage(eventMessage(event), {
+    await sendMessage(eventMessage(event, user), {
       ctx,
       reply_markup: eventMarkup({
         event,
@@ -234,7 +253,7 @@ export class EventsService {
 
     const user = await this.usersRepository.findByPk(userId);
 
-    await sendMessage(eventMessage(event), {
+    await sendMessage(eventMessage(event, user), {
       bot: this.bot,
       chatId,
       messageId: +messageId,

@@ -1,7 +1,7 @@
 import { CalendarEvent } from 'src/calendar/models/event.model';
 import { backBarInlineBtns } from '../../../general';
 import { textMonths } from '../../configs';
-import { getZero } from 'src/libs/common';
+import { getNowDateWithTZ, getZero } from 'src/libs/common';
 import { CalendarBusyDay } from 'src/calendar/models/busy-day.model';
 
 interface CalendarDaysMarkup {
@@ -9,6 +9,7 @@ interface CalendarDaysMarkup {
   date: string;
   events: CalendarEvent[];
   busyDay: CalendarBusyDay | undefined;
+  timezone: string;
 }
 
 export const calendarDaysMessage = (date: string) => {
@@ -29,8 +30,9 @@ export const calendarDaysMarkup = ({
   date,
   events,
   busyDay,
+  timezone,
 }: CalendarDaysMarkup) => {
-  const eventsBtns = getEventsBtns(events, date, busyDay);
+  const eventsBtns = getEventsBtns(events, date, busyDay, timezone);
   const splitDate = date.split('.');
   const textDate = `${splitDate[0]} ${textMonths[+splitDate[1] - 1]}`;
 
@@ -59,6 +61,7 @@ function getEventsBtns(
   events: CalendarEvent[],
   date: string,
   busyDay: CalendarBusyDay,
+  timezone: string,
 ) {
   const eventsBtns = [];
 
@@ -80,8 +83,14 @@ function getEventsBtns(
     ]);
   } else {
     for (let event of events) {
-      const eventFrom = new Date(event.startTime);
-      const eventTill = new Date(event.endTime);
+      const eventFrom = getNowDateWithTZ({
+        initDate: event.startTime,
+        timezone,
+      });
+      const eventTill = getNowDateWithTZ({
+        initDate: event.endTime,
+        timezone,
+      });
       const eventFromTime = `${getZero(eventFrom.getUTCHours())}:${getZero(
         eventFrom.getUTCMinutes(),
       )}`;

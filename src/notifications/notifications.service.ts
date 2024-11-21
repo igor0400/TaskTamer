@@ -96,7 +96,7 @@ export class NotificationsService {
 
     const event = await this.eventsRepository.findByPk(eventId);
 
-    const notification = await this.createNotification({ ctx });
+    const notification = await this.createEventNotification({ ctx });
 
     try {
       await ctx.answerCbQuery(`✅ Напоминание установлено`, {
@@ -124,7 +124,7 @@ export class NotificationsService {
 
   async changeEventNotification(ctx: Context) {
     const { ctxUser, dataValue } = getCtxData(ctx);
-    const [eventId, addHours] = dataValue.split(':');
+    const [eventId] = dataValue.split(':');
 
     const user = await this.userRepository.findByTgId(ctxUser.id);
 
@@ -133,11 +133,11 @@ export class NotificationsService {
     await this.noiseNotificationRepository.destroy({
       where: {
         userId: user.id,
-        type: `event_${dataValue}`,
+        type: `event_${eventId}`,
       },
     });
 
-    const notification = await this.createNotification({ ctx });
+    const notification = await this.createEventNotification({ ctx });
 
     try {
       await ctx.answerCbQuery(`✅ Напоминание обновлено`, {
@@ -175,7 +175,7 @@ export class NotificationsService {
     await this.eventsService.changeToEvent(ctx, dataValue);
   }
 
-  private async createNotification({ ctx }) {
+  private async createEventNotification({ ctx }) {
     const { ctxUser, dataValue } = getCtxData(ctx);
     const [eventId, addHours] = dataValue.split(':');
 
@@ -194,7 +194,6 @@ export class NotificationsService {
       text: noiseNotificationMessage({ event, addHours }),
       sendTime,
       extraData: addHours,
-      markup: JSON.stringify(noiseNotificationMarkup(eventId)),
     });
   }
 
@@ -204,17 +203,27 @@ export class NotificationsService {
 
     for (let notification of allNotifications) {
       if (
-        new Date(new Date().toUTCString().replace('GMT', '')) >=
-        new Date(notification.sendTime)
+        new Date(new Date().toUTCString()) >= new Date(notification.sendTime)
       ) {
-        const user = await this.userRepository.findByPk(notification.userId);
+        const datesDiff =
+          // @ts-ignore
+          new Date(new Date().toUTCString()) - new Date(notification.sendTime);
+        const diffMins = datesDiff / 1000 / 60;
 
-        await sendMessage(notification.text, {
-          bot: this.bot,
-          type: 'send',
-          isBanner: false,
-          chatId: user.telegramId,
-          reply_markup: JSON.parse(notification.markup),
+        if (diffMins <= 10) {
+          const user = await this.userRepository.findByPk(notification.userId);
+
+          await sendMessage(notification.text, {
+            bot: this.bot,
+            type: 'send',
+            isBanner: false,
+            chatId: user.telegramId,
+            reply_markup: JSON.parse(notification.markup),
+          });
+        }
+
+        await this.noiseNotificationRepository.destroy({
+          where: { id: notification.id },
         });
       }
     }

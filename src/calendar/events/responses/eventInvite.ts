@@ -4,9 +4,15 @@ import { getUserName } from 'src/libs/common';
 import { User } from 'src/users/models/user.model';
 import { getEventTexts } from '../assets';
 
-export const eventInviteMessage = (event: CalendarEvent, owner: User) => {
-  const { title, textDate, textStart, textEnd, textMembers } =
-    getEventTexts(event);
+export const eventInviteMessage = (
+  event: CalendarEvent,
+  owner: User,
+  user: User,
+) => {
+  const { title, textDate, textStart, textEnd, textMembers } = getEventTexts(
+    event,
+    user.timezone,
+  );
 
   return `<b>Приглашение</b>
 

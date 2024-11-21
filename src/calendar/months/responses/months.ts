@@ -1,9 +1,9 @@
 import { CalendarBusyDay } from 'src/calendar/models/busy-day.model';
-import { backInlineBtn, localBackInlineBtn } from '../../../general';
+import { localBackInlineBtn } from '../../../general';
 import {
   formatKeyboard,
   getEmptyBtns,
-  getNowDate,
+  getNowDateWithTZ,
   getZero,
 } from 'src/libs/common';
 import { months, weekDays } from '../../configs';
@@ -19,14 +19,15 @@ export const calendarMonthsMarkup = (
   userId: string,
   busyDays: CalendarBusyDay[],
   incMonth = 0,
+  timezone: string,
 ) => {
-  const oldestDate = getNowDate();
+  const oldestDate = getNowDateWithTZ({ timezone });
   oldestDate.setUTCMonth(oldestDate.getUTCMonth() + 1 + incMonth);
   oldestDate.setUTCDate(0);
   const maxDate = oldestDate.getUTCDate();
   const maxDateDay = oldestDate.getUTCDay();
 
-  const newestDate = getNowDate();
+  const newestDate = getNowDateWithTZ({ timezone });
   newestDate.setUTCMonth(newestDate.getUTCMonth() + incMonth);
   newestDate.setUTCDate(1);
   const minDateDay = newestDate.getUTCDay();
@@ -42,7 +43,7 @@ export const calendarMonthsMarkup = (
 
     let dayText = String(i);
 
-    const today = getNowDate();
+    const today = getNowDateWithTZ({ timezone });
 
     if (isBusy) {
       dayText = '❌';

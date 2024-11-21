@@ -21,6 +21,7 @@ import { MailingsModule } from './mailings/mailings.module';
 import { PaginationModule } from './libs/pagination/pagination.module';
 import { FilesModule } from './files/files.module';
 import { TimezoneModule } from './timezone/timezone.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { TimezoneModule } from './timezone/timezone.module';
       }),
       inject: [ConfigService],
     }),
+    ScheduleModule.forRoot(),
     DatabaseModule,
     CalendarModule,
     StartModule,

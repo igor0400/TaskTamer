@@ -3,7 +3,7 @@ import { backInlineBtn } from '../../../general';
 import {
   formatKeyboard,
   getEmptyBtns,
-  getNowDate,
+  getNowDateWithTZ,
   getUserName,
   getZero,
 } from 'src/libs/common';
@@ -24,14 +24,15 @@ export const shareCalendarMonthsMarkup = (
   userId: string,
   busyDays: CalendarBusyDay[],
   incMonth = 0,
+  timezone: string,
 ) => {
-  const oldestDate = getNowDate();
+  const oldestDate = getNowDateWithTZ({ timezone });
   oldestDate.setUTCMonth(oldestDate.getUTCMonth() + 1 + incMonth);
   oldestDate.setUTCDate(0);
   const maxDate = oldestDate.getUTCDate();
   const maxDateDay = oldestDate.getUTCDay();
 
-  const newestDate = getNowDate();
+  const newestDate = getNowDateWithTZ({ timezone });
   newestDate.setUTCMonth(newestDate.getUTCMonth() + incMonth);
   newestDate.setUTCDate(1);
   const minDateDay = newestDate.getUTCDay();
@@ -47,7 +48,7 @@ export const shareCalendarMonthsMarkup = (
 
     let dayText = String(i);
 
-    const today = getNowDate();
+    const today = getNowDateWithTZ({ timezone });
 
     if (isBusy) {
       dayText = '❌';

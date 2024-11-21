@@ -29,22 +29,25 @@ export const setTimezoneMarkup = (initTime: string) => {
     console.error('Error setTimezoneMarkup:', e);
   }
 
-  if (hours > 23) {
-    hours = 0;
-    ETval = date.getUTCHours();
-    ETtype = '-';
+  if (hours > 23 || hours < 0) {
+    hours = (hours + 24) % 24;
   }
 
-  if (hours < 0) {
-    hours = 23;
-    ETval = 23 - date.getUTCHours();
-    ETtype = '+';
+  if (ETval < 0) {
+    ETval = Math.ceil(ETval);
+    ETtype = '-';
   }
 
   const strHrs = String(getZero(hours));
 
   const minutes = date.getUTCMinutes();
   const strMins = String(getZero(minutes));
+
+  const decBtnType = ETval === 0 ? '-' : ETtype ? ETtype : '-';
+  const decBtnValue = ETtype === '-' ? ETval + 1 : Math.abs(ETval - 1);
+
+  const incBtnType = ETval === 0 ? '+' : ETtype ? ETtype : '+';
+  const incBtnValue = ETtype === '+' ? ETval + 1 : Math.abs(ETval - 1);
 
   return {
     inline_keyboard: [
@@ -58,15 +61,11 @@ export const setTimezoneMarkup = (initTime: string) => {
       [
         {
           text: '🔽',
-          callback_data: `${ETtype ? ETtype : '-'}${
-            ETtype === '-' ? ETval + 1 : ETval - 1
-          }::change_set_tz_hours`,
+          callback_data: `${decBtnType}${decBtnValue}::change_set_tz_hours`,
         },
         {
           text: '🔼',
-          callback_data: `${ETtype ? ETtype : '+'}${
-            ETtype === '+' ? ETval + 1 : ETval - 1
-          }::change_set_tz_hours`,
+          callback_data: `${incBtnType}${incBtnValue}::change_set_tz_hours`,
         },
       ],
       [{ text: '✅ Сохранить', callback_data: `${initTime}::save_timezone` }],

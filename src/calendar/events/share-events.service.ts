@@ -49,7 +49,7 @@ export class ShareEventsService {
       include: [{ model: CalendarEventMember, include: [User] }],
     });
 
-    await sendMessage(eventMessage(event), {
+    await sendMessage(eventMessage(event, user), {
       ctx,
       reply_markup: eventMarkup({
         event,
@@ -74,7 +74,7 @@ export class ShareEventsService {
       include: [{ model: CalendarEventMember, include: [User] }],
     });
 
-    await sendMessage(eventMessage(event), {
+    await sendMessage(eventMessage(event, user), {
       bot: this.bot,
       chatId,
       messageId: +messageId,
@@ -124,7 +124,7 @@ export class ShareEventsService {
     );
 
     try {
-      sendMessage(eventInviteMessage(event, owner), {
+      sendMessage(eventInviteMessage(event, owner, invitedUser), {
         bot: this.bot,
         chatId: invitedUserTgId,
         reply_markup: eventInviteMarkup(event.id),
@@ -134,7 +134,7 @@ export class ShareEventsService {
       this.basicNotificationRepository.create({
         userTelegramId: invitedUserTgId,
         title: 'Приглашение',
-        text: eventInviteMessage(event, owner),
+        text: eventInviteMessage(event, owner, invitedUser),
         markup: JSON.stringify(eventInviteMarkup(event.id, invitedUserId)),
       });
     } catch (e) {}
@@ -235,7 +235,7 @@ export class ShareEventsService {
     });
     const owner = await this.usersRepository.findByPk(userId);
 
-    await sendMessage(eventInviteMessage(event, owner), {
+    await sendMessage(eventInviteMessage(event, owner, user), {
       ctx,
       reply_markup: eventInviteMarkup(event.id),
       type: 'send',

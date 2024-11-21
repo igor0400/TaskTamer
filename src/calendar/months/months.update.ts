@@ -1,9 +1,10 @@
-import { Action, Command, Update } from 'nestjs-telegraf';
+import { Action, Command, Hears, Update } from 'nestjs-telegraf';
 import { CalendarMonthsService } from './months.service';
 import { Context } from 'telegraf';
 import { GeneralMiddlewares } from 'src/general/general.middlewares';
 import { getCtxData } from 'src/libs/common';
 import { getMonthDifferenceByDateVal } from './assets';
+import { calendarBtnText } from 'src/menu/responses';
 
 @Update()
 export class CalendarMonthsUpdate {
@@ -12,6 +13,7 @@ export class CalendarMonthsUpdate {
     private readonly middlewares: GeneralMiddlewares,
   ) {}
 
+  @Hears(calendarBtnText)
   @Command('calendar')
   async calendarCommand(ctx: Context) {
     await this.middlewares.commandMiddleware(ctx, (ctx: Context) =>

@@ -3,10 +3,13 @@ import { CalendarEvent } from 'src/calendar/models/event.model';
 import { backBarInlineBtns, getDayDate } from 'src/general';
 import { getEventTexts } from '../assets';
 import { getNowDateWithTZ } from 'src/libs/common';
+import { User } from 'src/users/models/user.model';
 
-export const eventMessage = (event: CalendarEvent) => {
-  const { title, textDate, textStart, textEnd, textMembers } =
-    getEventTexts(event);
+export const eventMessage = (event: CalendarEvent, user: User) => {
+  const { title, textDate, textStart, textEnd, textMembers } = getEventTexts(
+    event,
+    user.timezone,
+  );
 
   return `<b>Событие — ${title}</b>
 
@@ -30,7 +33,10 @@ export const eventMarkup = ({
   timezone: string;
   inviterId?: string;
 }) => {
-  const startDate = new Date(event?.startTime);
+  const startDate = getNowDateWithTZ({
+    initDate: event.startTime,
+    timezone,
+  });
   const textDate = `${startDate.getUTCDate()} ${
     textMonths[startDate.getUTCMonth()]
   }`;
@@ -53,7 +59,7 @@ export const eventMarkup = ({
     ? `${getDayDate(startDate)}_${inviterId}::back_to_share_calendar_date`
     : `${getDayDate(startDate)}::back_to_calendar_date`;
 
-  const notification =
+  const isHaveTTN =
     getNowDateWithTZ({
       timezone,
       incHours: 1,
@@ -61,16 +67,18 @@ export const eventMarkup = ({
     getNowDateWithTZ({
       timezone,
       initDate: event.startTime,
-    })
-      ? [
-          [
-            {
-              text: '🔔 Напоминание',
-              callback_data: `${event.id}::notifi_to_calendar_event`,
-            },
-          ],
-        ]
-      : [];
+    });
+
+  const notification = isHaveTTN
+    ? [
+        [
+          {
+            text: '🔔 Напоминание',
+            callback_data: `${event.id}::notifi_to_calendar_event`,
+          },
+        ],
+      ]
+    : [];
 
   return {
     inline_keyboard: [

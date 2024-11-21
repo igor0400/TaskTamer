@@ -1,7 +1,7 @@
 import { CalendarEvent } from 'src/calendar/models/event.model';
 import { backBarInlineBtns } from '../../../general';
 import { textMonths } from '../../configs';
-import { getUserName, getZero } from 'src/libs/common';
+import { getNowDateWithTZ, getUserName, getZero } from 'src/libs/common';
 import { CalendarBusyDay } from 'src/calendar/models/busy-day.model';
 import { User } from 'src/users/models/user.model';
 
@@ -10,6 +10,7 @@ interface CalendarDaysMarkup {
   date: string;
   events: CalendarEvent[];
   busyDay: CalendarBusyDay | undefined;
+  timezone: string;
 }
 
 export const shareCalendarDaysMessage = (date: string, user: User) => {
@@ -26,8 +27,9 @@ export const shareCalendarDaysMarkup = ({
   date,
   events,
   busyDay,
+  timezone,
 }: CalendarDaysMarkup) => {
-  const eventsBtns = getEventsBtns(events, date, busyDay, userId);
+  const eventsBtns = getEventsBtns(events, date, busyDay, userId, timezone);
 
   return {
     inline_keyboard: [
@@ -42,6 +44,7 @@ function getEventsBtns(
   date: string,
   busyDay: CalendarBusyDay,
   userId: string,
+  timezone: string,
 ) {
   const eventsBtns = [];
 
@@ -57,8 +60,14 @@ function getEventsBtns(
     ]);
   } else {
     for (let event of events) {
-      const eventFrom = new Date(event.startTime);
-      const eventTill = new Date(event.endTime);
+      const eventFrom = getNowDateWithTZ({
+        initDate: event.startTime,
+        timezone,
+      });
+      const eventTill = getNowDateWithTZ({
+        initDate: event.endTime,
+        timezone,
+      });
       const eventFromTime = `${getZero(eventFrom.getUTCHours())}:${getZero(
         eventFrom.getUTCMinutes(),
       )}`;

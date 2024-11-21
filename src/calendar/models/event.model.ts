@@ -5,8 +5,8 @@ import { CalendarEventMember } from './event-member.model';
 export interface CalendarEventCreationArgs {
   creatorId: string;
   title?: string;
-  startTime: string;
-  endTime: string;
+  startTime: Date;
+  endTime: Date;
   type: string;
 }
 
@@ -27,16 +27,16 @@ export class CalendarEvent extends AbstractModel<
   title?: string;
 
   @Column({
-    type: DataType.STRING,
+    type: DataType.DATE,
     allowNull: false,
   })
-  startTime: string;
+  startTime: Date;
 
   @Column({
-    type: DataType.STRING,
+    type: DataType.DATE,
     allowNull: false,
   })
-  endTime: string;
+  endTime: Date;
 
   @Column({
     type: DataType.STRING,

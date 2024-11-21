@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { getCtxData, getZero } from 'src/libs/common';
+import { getCtxData, getNowDateWithTZ, getZero } from 'src/libs/common';
 import { Context } from 'telegraf';
 import {
   selectEventHoursMarkup,
@@ -54,8 +54,6 @@ export class EventsAdditionalService {
     const creatorTgId = ctxUser.id;
     const creator = await this.userRepository.findByTgId(creatorTgId);
 
-    console.log({ options, user, userTgId, creator });
-
     const userId = options?.userId ?? creator.id;
 
     const eventsMembers = await this.eventsMembersRepository.findAll({
@@ -66,7 +64,17 @@ export class EventsAdditionalService {
       },
       include: [CalendarEvent],
     });
-    const events = eventsMembers.map((i) => i.event);
+    const events = eventsMembers.map((i) => ({
+      ...i.event.dataValues,
+      startTime: getNowDateWithTZ({
+        initDate: i.event.startTime,
+        timezone: creator.timezone,
+      }),
+      endTime: getNowDateWithTZ({
+        initDate: i.event.endTime,
+        timezone: creator.timezone,
+      }),
+    }));
     const filteredEvents = filterMultyEvents(
       filterEventsByDate(events, dateVal),
     );

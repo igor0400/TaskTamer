@@ -1,12 +1,10 @@
-import { CalendarEvent } from 'src/calendar/models/event.model';
-
-export const filterMultyEvents = (events: CalendarEvent[]) => {
-  let resultEvents: CalendarEvent[] = [];
+export const filterMultyEvents = (events: any[]) => {
+  let resultEvents: any[] = [];
 
   if (!events.length) return [];
 
   for (let event of events) {
-    if (!event?.dataValues) continue;
+    if (!event?.startTime) continue;
 
     const evStart = new Date(event.startTime);
     const evEnd = new Date(event.endTime);

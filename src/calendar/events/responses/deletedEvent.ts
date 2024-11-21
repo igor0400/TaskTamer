@@ -5,7 +5,10 @@ import { User } from 'src/users/models/user.model';
 import { getEventTexts } from '../assets';
 
 export const deletedEventMessage = (user: User, event: CalendarEvent) => {
-  const { title, textDate, textStart, textEnd } = getEventTexts(event);
+  const { title, textDate, textStart, textEnd } = getEventTexts(
+    event,
+    user?.timezone,
+  );
 
   return `<b>Уведомление</b>
 

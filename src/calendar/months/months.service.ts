@@ -47,7 +47,12 @@ export class CalendarMonthsService {
 
     await sendMessage(calendarMonthsMessage(), {
       ctx,
-      reply_markup: calendarMonthsMarkup(user?.id, busyDays, incMonth),
+      reply_markup: calendarMonthsMarkup(
+        user?.id,
+        busyDays,
+        incMonth,
+        user.timezone,
+      ),
       type: isSend ? 'send' : 'edit',
     });
   }

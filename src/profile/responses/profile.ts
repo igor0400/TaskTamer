@@ -7,7 +7,7 @@ export const profileMessage = (user: User) => `<b>Ваш личный кабин
 
 <b>Вы:</b> ${getUserName(user)}
 <b>Ваш ID:</b> <code>${user.telegramId}</code>
-<b>Часовой пояс:</b> <code>UTC(${user.timezone})</code>
+<b>Часовой пояс:</b> <code>UTC (${user.timezone})</code>
 
 <i>Для изменения часового пояса, управления подписками и уведомлениями можете ориентироваться по соответствующим кнопкам ниже</i>`;
 

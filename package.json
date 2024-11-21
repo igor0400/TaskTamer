@@ -32,6 +32,7 @@
     "mysql2": "^3.6.3",
     "nestjs-pino": "^3.5.0",
     "nestjs-telegraf": "^2.7.0",
+    "node-cron": "^3.0.3",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.2.0",
     "sequelize": "^6.35.0",

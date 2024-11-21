@@ -18,11 +18,11 @@ module.exports = {
         type: Sequelize.STRING(100),
       },
       startTime: {
-        type: Sequelize.STRING(100),
+        type: Sequelize.DATE,
         allowNull: false,
       },
       endTime: {
-        type: Sequelize.STRING(100),
+        type: Sequelize.DATE,
         allowNull: false,
       },
       type: {

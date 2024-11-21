@@ -139,6 +139,7 @@ export class CalendarDaysService {
       userId,
       events: sortedEvents,
       busyDay,
+      timezone: user.timezone,
     };
   }
 }
