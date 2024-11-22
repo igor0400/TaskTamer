@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Context } from 'telegraf';
 import { calendarDaysMarkup, calendarDaysMessage } from './responses';
-import { getCtxData, replyPhoto } from 'src/libs/common';
+import { getCtxData, getNowDateWithTZ, replyPhoto } from 'src/libs/common';
 import { EventsMembersRepository } from '../repositories/event-member.repository';
 import { CalendarEvent } from '../models/event.model';
 import { BusyDaysRepository } from '../repositories/busy-day.repository';
@@ -9,6 +9,8 @@ import { getDateFromDataVal } from '../assets';
 import { filterEventsByDate } from '../events/assets';
 import { UserRepository } from 'src/users/repositories/user.repository';
 import { sendMessage } from 'src/general';
+import { CreatePaginationProps } from 'src/libs/pagination/types';
+import { PaginationService } from 'src/libs/pagination/pagination.service';
 
 @Injectable()
 export class CalendarDaysService {
@@ -16,14 +18,17 @@ export class CalendarDaysService {
     private readonly eventsMembersRepository: EventsMembersRepository,
     private readonly usersRepository: UserRepository,
     private readonly busyDaysRepository: BusyDaysRepository,
+    private readonly paginationService: PaginationService,
   ) {}
 
   async sendCalendarDay(ctx: Context, date: string) {
     const markupData = await this.getMarkupData(ctx, date);
 
+    const markup = await calendarDaysMarkup({ date, ...markupData });
+
     await sendMessage(calendarDaysMessage(date), {
       ctx,
-      reply_markup: calendarDaysMarkup({ date, ...markupData }),
+      reply_markup: markup,
       type: 'send',
     });
   }
@@ -31,9 +36,11 @@ export class CalendarDaysService {
   async changeToCalendarDay(ctx: Context, date: string) {
     const markupData = await this.getMarkupData(ctx, date);
 
+    const markup = await calendarDaysMarkup({ date, ...markupData });
+
     await sendMessage(calendarDaysMessage(date), {
       ctx,
-      reply_markup: calendarDaysMarkup({ date, ...markupData }),
+      reply_markup: markup,
     });
   }
 
@@ -131,7 +138,17 @@ export class CalendarDaysService {
       },
     });
     const sortedEvents = filterEventsByDate(
-      eventMembers.map((i) => i.event),
+      eventMembers.map((i) => ({
+        ...i.event.dataValues,
+        startTime: getNowDateWithTZ({
+          initDate: i.event.startTime,
+          timezone: user.timezone,
+        }),
+        endTime: getNowDateWithTZ({
+          initDate: i.event.endTime,
+          timezone: user.timezone,
+        }),
+      })),
       dateVal,
     );
 
@@ -139,7 +156,12 @@ export class CalendarDaysService {
       userId,
       events: sortedEvents,
       busyDay,
-      timezone: user.timezone,
+      createPagination: async (conf: Omit<CreatePaginationProps, 'userId'>) => {
+        return await this.paginationService.create({
+          userId: user.id,
+          ...conf,
+        });
+      },
     };
   }
 }

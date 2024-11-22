@@ -22,6 +22,7 @@ import { PaginationModule } from './libs/pagination/pagination.module';
 import { FilesModule } from './files/files.module';
 import { TimezoneModule } from './timezone/timezone.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { ChatsModule } from './chats/chats.module';
 
 @Module({
   imports: [
@@ -57,6 +58,8 @@ import { ScheduleModule } from '@nestjs/schedule';
     TimezoneModule,
 
     ListenersLowModule,
+
+    ChatsModule,
   ],
 })
 export class AppModule {}

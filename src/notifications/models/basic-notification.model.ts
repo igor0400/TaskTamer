@@ -6,6 +6,7 @@ export interface BasicNotificationCreationArgs {
   title: string;
   text: string;
   markup?: string;
+  extraData?: string;
 }
 
 @Table({ tableName: 'BasicNotifications' })
@@ -35,4 +36,9 @@ export class BasicNotification extends AbstractModel<
     type: DataType.STRING,
   })
   markup?: string;
+
+  @Column({
+    type: DataType.STRING,
+  })
+  extraData?: string;
 }

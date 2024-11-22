@@ -1,15 +1,18 @@
 import { CalendarEvent } from 'src/calendar/models/event.model';
-import { backBarInlineBtns } from '../../../general';
+import { backBarInlineBtns, InlineBtnType } from '../../../general';
 import { textMonths } from '../../configs';
-import { getNowDateWithTZ, getZero } from 'src/libs/common';
+import { getZero } from 'src/libs/common';
 import { CalendarBusyDay } from 'src/calendar/models/busy-day.model';
+import { CreatePaginationProps } from 'src/libs/pagination/types';
 
 interface CalendarDaysMarkup {
   userId: string;
   date: string;
   events: CalendarEvent[];
   busyDay: CalendarBusyDay | undefined;
-  timezone: string;
+  createPagination: (
+    conf: Omit<CreatePaginationProps, 'userId'>,
+  ) => Promise<InlineBtnType[][]>;
 }
 
 export const calendarDaysMessage = (date: string) => {
@@ -25,14 +28,19 @@ export const calendarDaysMessage = (date: string) => {
 — <u>поделится</u> ссылкой на эту дату`;
 };
 
-export const calendarDaysMarkup = ({
+export const calendarDaysMarkup = async ({
   userId,
   date,
   events,
   busyDay,
-  timezone,
+  createPagination,
 }: CalendarDaysMarkup) => {
-  const eventsBtns = getEventsBtns(events, date, busyDay, timezone);
+  const eventsBtns = await getEventsBtns(
+    events,
+    date,
+    busyDay,
+    createPagination,
+  );
   const splitDate = date.split('.');
   const textDate = `${splitDate[0]} ${textMonths[+splitDate[1] - 1]}`;
 
@@ -57,13 +65,14 @@ export const calendarDaysMarkup = ({
   };
 };
 
-function getEventsBtns(
+async function getEventsBtns(
   events: CalendarEvent[],
   date: string,
   busyDay: CalendarBusyDay,
-  timezone: string,
+  createPagination: Function,
 ) {
   const eventsBtns = [];
+  const extraBtns = [];
 
   if (busyDay && events.length === 0) {
     return [
@@ -78,19 +87,14 @@ function getEventsBtns(
   }
 
   if (events.length === 0) {
-    eventsBtns.push([
-      { text: 'Список пуст', callback_data: 'empty_calendar_day_events' },
-    ]);
+    eventsBtns.push({
+      text: 'Список пуст',
+      callback_data: 'empty_calendar_day_events',
+    });
   } else {
     for (let event of events) {
-      const eventFrom = getNowDateWithTZ({
-        initDate: event.startTime,
-        timezone,
-      });
-      const eventTill = getNowDateWithTZ({
-        initDate: event.endTime,
-        timezone,
-      });
+      const eventFrom = new Date(event.startTime);
+      const eventTill = new Date(event.endTime);
       const eventFromTime = `${getZero(eventFrom.getUTCHours())}:${getZero(
         eventFrom.getUTCMinutes(),
       )}`;
@@ -98,19 +102,17 @@ function getEventsBtns(
         eventTill.getUTCMinutes(),
       )}`;
 
-      eventsBtns.push([
-        {
-          text: `${eventFromTime} - ${eventTillTime}${
-            event.title ? ` | ${event.title}` : ''
-          }`,
-          callback_data: `${event.id}::calendar_event`,
-        },
-      ]);
+      eventsBtns.push({
+        text: `${eventFromTime} - ${eventTillTime}${
+          event.title ? ` | ${event.title}` : ''
+        }`,
+        callback_data: `${event.id}::calendar_event`,
+      });
     }
   }
 
   if (busyDay?.type === 'manually') {
-    eventsBtns.push(
+    extraBtns.push(
       ...[
         [{ text: '❌ День недоступен', callback_data: 'busy_calendar_day' }],
         [
@@ -124,7 +126,7 @@ function getEventsBtns(
   }
 
   if (!busyDay) {
-    eventsBtns.push(
+    extraBtns.push(
       ...[
         [
           {
@@ -142,5 +144,12 @@ function getEventsBtns(
     );
   }
 
-  return eventsBtns;
+  const pagination = await createPagination({
+    items: eventsBtns,
+    pageItemsCount: 10,
+    rowLen: 1,
+    isShowCount: true,
+  });
+
+  return [...pagination, ...extraBtns];
 }

@@ -40,8 +40,8 @@ export class PaginationUpdate {
 
         for (let btn of btnsArr) {
           if (
-            btn.callback_data.slice(-7) === '__pagin' ||
-            btn.callback_data.includes('pagination_')
+            btn?.callback_data?.slice(-7) === '__pagin' ||
+            btn?.callback_data?.includes('pagination_')
           ) {
             isPaginRow = true;
           }

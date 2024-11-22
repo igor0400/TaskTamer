@@ -1,4 +1,4 @@
-import { backInlineBtn } from 'src/general';
+import { backBarInlineBtns } from 'src/general';
 
 export const leaveEventConfirmMessage = () => `<b>Подтверждение</b>
 
@@ -12,12 +12,6 @@ export const leaveEventConfirmMarkup = (eventId: string) => ({
         callback_data: `${eventId}::leave_calendar_event`,
       },
     ],
-    [
-      {
-        text: '↩️ Вернуться',
-        callback_data: `${eventId}::back_to_calendar_event`,
-      },
-    ],
-    backInlineBtn,
+    ...backBarInlineBtns(`${eventId}::back_to_calendar_event`),
   ],
 });

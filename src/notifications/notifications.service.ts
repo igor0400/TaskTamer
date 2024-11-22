@@ -20,6 +20,8 @@ import { EventsRepository } from 'src/calendar/repositories/event.repository';
 import { EventsService } from 'src/calendar/events/events.service';
 import { Cron } from '@nestjs/schedule';
 import { InjectBot } from 'nestjs-telegraf';
+import { CreatePaginationProps } from 'src/libs/pagination/types';
+import { PaginationService } from 'src/libs/pagination/pagination.service';
 
 @Injectable()
 export class NotificationsService {
@@ -29,6 +31,7 @@ export class NotificationsService {
     private readonly eventsRepository: EventsRepository,
     private readonly eventsService: EventsService,
     private readonly userRepository: UserRepository,
+    private readonly paginationService: PaginationService,
     @InjectBot() private bot: Telegraf<Context>,
   ) {}
 
@@ -40,10 +43,21 @@ export class NotificationsService {
         userTelegramId: userTgId,
       },
     });
+    const user = await this.userRepository.findByTgId(userTgId);
+
+    const markup = await basicNotificationsMarkup(
+      notifications,
+      async (conf: Omit<CreatePaginationProps, 'userId'>) => {
+        return await this.paginationService.create({
+          userId: user.id,
+          ...conf,
+        });
+      },
+    );
 
     await sendMessage(basicNotificationsMessage(), {
       ctx,
-      reply_markup: basicNotificationsMarkup(notifications),
+      reply_markup: markup,
     });
   }
 

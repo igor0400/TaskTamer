@@ -8,7 +8,9 @@ import { getDateFromDataVal } from '../assets';
 import { filterEventsByDate } from '../events/assets';
 import { UserRepository } from 'src/users/repositories/user.repository';
 import { sendMessage } from 'src/general';
-import { getCtxData } from 'src/libs/common';
+import { getCtxData, getNowDateWithTZ } from 'src/libs/common';
+import { CreatePaginationProps } from 'src/libs/pagination/types';
+import { PaginationService } from 'src/libs/pagination/pagination.service';
 
 @Injectable()
 export class ShareCalendarDaysService {
@@ -16,15 +18,18 @@ export class ShareCalendarDaysService {
     private readonly eventsMembersRepository: EventsMembersRepository,
     private readonly usersRepository: UserRepository,
     private readonly busyDaysRepository: BusyDaysRepository,
+    private readonly paginationService: PaginationService,
   ) {}
 
   async sendCalendarDay(ctx: Context, date: string, userId: string) {
     const user = await this.usersRepository.findByPk(userId);
     const markupData = await this.getMarkupData(date, userId, ctx);
 
+    const markup = await shareCalendarDaysMarkup({ date, ...markupData });
+
     await sendMessage(shareCalendarDaysMessage(date, user), {
       ctx,
-      reply_markup: shareCalendarDaysMarkup({ date, ...markupData }),
+      reply_markup: markup,
       type: 'send',
     });
   }
@@ -33,9 +38,11 @@ export class ShareCalendarDaysService {
     const user = await this.usersRepository.findByPk(userId);
     const markupData = await this.getMarkupData(date, userId, ctx);
 
+    const markup = await shareCalendarDaysMarkup({ date, ...markupData });
+
     await sendMessage(shareCalendarDaysMessage(date, user), {
       ctx,
-      reply_markup: shareCalendarDaysMarkup({ date, ...markupData }),
+      reply_markup: markup,
     });
   }
 
@@ -58,7 +65,17 @@ export class ShareCalendarDaysService {
       },
     });
     const sortedEvents = filterEventsByDate(
-      eventMembers.map((i) => i.event),
+      eventMembers.map((i) => ({
+        ...i.event.dataValues,
+        startTime: getNowDateWithTZ({
+          initDate: i.event.startTime,
+          timezone: user.timezone,
+        }),
+        endTime: getNowDateWithTZ({
+          initDate: i.event.endTime,
+          timezone: user.timezone,
+        }),
+      })),
       dateVal,
     );
 
@@ -66,7 +83,12 @@ export class ShareCalendarDaysService {
       userId,
       events: sortedEvents,
       busyDay,
-      timezone: user.timezone,
+      createPagination: async (conf: Omit<CreatePaginationProps, 'userId'>) => {
+        return await this.paginationService.create({
+          userId: user.id,
+          ...conf,
+        });
+      },
     };
   }
 }

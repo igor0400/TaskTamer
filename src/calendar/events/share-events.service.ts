@@ -136,6 +136,7 @@ export class ShareEventsService {
         title: 'Приглашение',
         text: eventInviteMessage(event, owner, invitedUser),
         markup: JSON.stringify(eventInviteMarkup(event.id, invitedUserId)),
+        extraData: event.id,
       });
     } catch (e) {}
 
@@ -182,7 +183,7 @@ export class ShareEventsService {
     });
 
     await this.basicNotificationRepository.destroy({
-      where: { userTelegramId: userTgId },
+      where: { userTelegramId: userTgId, extraData: event.id },
     });
   }
 
@@ -205,7 +206,7 @@ export class ShareEventsService {
     });
 
     await this.basicNotificationRepository.destroy({
-      where: { userTelegramId: userTgId },
+      where: { userTelegramId: userTgId, extraData: event.id },
     });
 
     await this.menuService.sendMenu(ctx);

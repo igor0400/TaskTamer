@@ -51,6 +51,7 @@ export const setTimezoneMarkup = (initTime: string) => {
 
   return {
     inline_keyboard: [
+      [{ text: 'Установить МСК', callback_data: `+3::save_timezone` }],
       [
         { text: strHrs[0], callback_data: 'some' },
         { text: strHrs[1], callback_data: 'some' },

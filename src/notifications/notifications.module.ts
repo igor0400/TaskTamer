@@ -9,6 +9,7 @@ import { NoiseNotificationRepository } from './repositories/noise-notification.r
 import { NoiseNotification } from './models/noise-notification.model';
 import { UsersModule } from 'src/users/users.module';
 import { CalendarModule } from 'src/calendar/calendar.module';
+import { PaginationModule } from 'src/libs/pagination/pagination.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { CalendarModule } from 'src/calendar/calendar.module';
     forwardRef(() => GeneralModule),
     UsersModule,
     CalendarModule,
+    PaginationModule,
   ],
   providers: [
     NotificationsUpdate,

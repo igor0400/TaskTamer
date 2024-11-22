@@ -25,6 +25,7 @@ module.exports = {
       markup: {
         type: Sequelize.TEXT,
       },
+      extraData: Sequelize.TEXT,
       createdAt: {
         type: Sequelize.DATE,
         defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
