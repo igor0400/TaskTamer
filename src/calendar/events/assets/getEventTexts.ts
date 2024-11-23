@@ -22,8 +22,10 @@ export const getEventTexts = (event: CalendarEvent, timezone: string) => {
 
   const members = [];
 
-  for (let { user } of event?.members) {
-    members.push(getUserName(user));
+  if (event?.members) {
+    for (let { user } of event?.members) {
+      members.push(getUserName(user));
+    }
   }
 
   return {

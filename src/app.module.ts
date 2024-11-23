@@ -23,6 +23,7 @@ import { FilesModule } from './files/files.module';
 import { TimezoneModule } from './timezone/timezone.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ChatsModule } from './chats/chats.module';
+import { CommandsModule } from './commands/commands.module';
 
 @Module({
   imports: [
@@ -56,10 +57,10 @@ import { ChatsModule } from './chats/chats.module';
     MailingsModule,
     FilesModule,
     TimezoneModule,
+    ChatsModule,
+    CommandsModule,
 
     ListenersLowModule,
-
-    ChatsModule,
   ],
 })
 export class AppModule {}

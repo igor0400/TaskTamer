@@ -137,6 +137,7 @@ export class CalendarDaysService {
         date: date.getUTCDate(),
       },
     });
+
     const sortedEvents = filterEventsByDate(
       eventMembers.map((i) => ({
         ...i.event.dataValues,

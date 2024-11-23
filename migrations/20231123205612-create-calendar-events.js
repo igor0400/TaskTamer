@@ -17,6 +17,9 @@ module.exports = {
       title: {
         type: Sequelize.STRING(100),
       },
+      description: {
+        type: Sequelize.STRING(300),
+      },
       startTime: {
         type: Sequelize.DATE,
         allowNull: false,
@@ -28,6 +31,12 @@ module.exports = {
       type: {
         type: Sequelize.STRING(100),
         allowNull: false,
+      },
+      chatId: {
+        type: Sequelize.STRING(100),
+      },
+      chatTitle: {
+        type: Sequelize.STRING(100),
       },
       createdAt: {
         type: Sequelize.DATE,

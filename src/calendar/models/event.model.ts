@@ -5,9 +5,12 @@ import { CalendarEventMember } from './event-member.model';
 export interface CalendarEventCreationArgs {
   creatorId: string;
   title?: string;
+  description?: string;
   startTime: Date;
   endTime: Date;
   type: string;
+  chatId?: string;
+  chatTitle?: string;
 }
 
 @Table({ tableName: 'CalendarEvents' })
@@ -27,6 +30,11 @@ export class CalendarEvent extends AbstractModel<
   title?: string;
 
   @Column({
+    type: DataType.STRING,
+  })
+  description?: string;
+
+  @Column({
     type: DataType.DATE,
     allowNull: false,
   })
@@ -43,6 +51,16 @@ export class CalendarEvent extends AbstractModel<
     allowNull: false,
   })
   type: string;
+
+  @Column({
+    type: DataType.STRING,
+  })
+  chatId?: string;
+
+  @Column({
+    type: DataType.STRING,
+  })
+  chatTitle?: string;
 
   @HasMany(() => CalendarEventMember)
   members: CalendarEventMember[];

@@ -119,10 +119,15 @@ export class EventsService {
 
     const creator = await this.usersRepository.findByPk(event.creatorId);
 
+    const startDate = getNowDateWithTZ({
+      initDate: event.startTime,
+      timezone: creator.timezone,
+    });
+
     await this.checkIsDayBusy({
       userId: creator.id,
       userTelegramId: creator.telegramId,
-      dateVal: getDayDate(event.startTime),
+      dateVal: getDayDate(startDate),
     });
 
     for (let member of event.members) {
@@ -143,7 +148,7 @@ export class EventsService {
       await this.checkIsDayBusy({
         userId: memberId,
         userTelegramId: memberTgId,
-        dateVal: getDayDate(event?.startTime),
+        dateVal: getDayDate(startDate),
       });
     }
 

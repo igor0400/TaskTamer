@@ -1,5 +1,4 @@
-import { Action, Update } from 'nestjs-telegraf';
-import { EventsService } from './events.service';
+import { Action, On, Update } from 'nestjs-telegraf';
 import { Context } from 'telegraf';
 import { GeneralMiddlewares } from 'src/general/general.middlewares';
 import { EventsAdditionalService } from './events-additional.service';
@@ -68,6 +67,13 @@ export class ShareEventsUpdate {
   async rejectEventInviteBtn(ctx: Context) {
     await this.middlewares.btnUnfollowNewsMiddleware(ctx, (ctx: Context) =>
       this.shareEventsService.rejectEventInvite(ctx),
+    );
+  }
+
+  @On('inline_query')
+  async onInlineQuery(ctx: Context) {
+    await this.middlewares.сhatCommandMiddleware(ctx, (ctx: Context) =>
+      this.shareEventsService.onInlineRequest(ctx),
     );
   }
 }
