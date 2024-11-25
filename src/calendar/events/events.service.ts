@@ -245,6 +245,29 @@ export class EventsService {
     });
   }
 
+  async sendEvent(ctx: Context, eventId: string) {
+    const { ctxUser } = getCtxData(ctx);
+    const userTgId = ctxUser.id;
+
+    const user = await this.usersRepository.findByTgId(userTgId);
+    const event = await this.eventsRepository.findByPk(eventId, {
+      include: [{ model: CalendarEventMember, include: [User] }],
+    });
+
+    const type = user?.id === event?.creatorId ? 'owner' : 'inviter';
+
+    await sendMessage(eventMessage(event, user), {
+      ctx,
+      reply_markup: eventMarkup({
+        event,
+        type,
+        userId: user.id,
+        timezone: user.timezone,
+      }),
+      type: 'send',
+    });
+  }
+
   async changeToEventByMess(
     chatId: string,
     messageId: string,

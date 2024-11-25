@@ -12,3 +12,4 @@ export * from './formatUsername';
 export * from './getEmptyBtns';
 export * from './getNowDateWithTZ';
 export * from './getDateFromTZToUTC';
+export * from './numUid';

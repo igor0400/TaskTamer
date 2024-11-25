@@ -1,8 +1,16 @@
 import { textMonths } from 'src/calendar/configs';
-import { CalendarEvent } from 'src/calendar/models/event.model';
+import { CalendarEventMember } from 'src/calendar/models/event-member.model';
 import { getNowDateWithTZ, getUserName } from 'src/libs/common';
 
-export const getEventTexts = (event: CalendarEvent, timezone: string) => {
+export const getEventTexts = (
+  event: {
+    title?: string;
+    startTime: Date;
+    endTime: Date;
+    members?: CalendarEventMember[];
+  },
+  timezone: string,
+) => {
   const startDate = getNowDateWithTZ({
     timezone,
     initDate: event.startTime,
@@ -12,11 +20,16 @@ export const getEventTexts = (event: CalendarEvent, timezone: string) => {
     initDate: event.endTime,
   });
 
-  const title = event.title ? event.title : 'Событие';
+  const title = event.title ? event.title : 'без названия';
+
+  const dateYear =
+    startDate.getUTCFullYear() === new Date().getUTCFullYear()
+      ? ''
+      : ` ${startDate.getUTCFullYear()}`;
 
   const textDate = `${startDate.getUTCDate()} ${
     textMonths[startDate.getUTCMonth()]
-  } ${startDate.getUTCFullYear()}`;
+  }${dateYear}`;
   const textStart = startDate?.toISOString()?.split('T')[1]?.slice(0, 5);
   const textEnd = endDate?.toISOString()?.split('T')[1]?.slice(0, 5);
 

@@ -7,6 +7,7 @@ export const menuMarkup = {
       { text: 'ℹ️ Информация', callback_data: 'info' },
       { text: '👤 Профиль', callback_data: 'profile' },
     ],
+    [{ text: '📝 Заметки', callback_data: 'notes_service' }],
     [{ text: '🗓 Календарь', callback_data: 'calendar_service' }],
   ],
 };

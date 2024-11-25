@@ -10,10 +10,12 @@ import {
   eventAcceptedMarkup,
   eventRejectedMessage,
   eventRejectedMarkup,
-  alreadyActiveInviteMessage,
-  inlineEventInviteMarkup,
   inlineEventInviteMessage,
   writeInlineRequestTemplate,
+  inlineLoadingEventInviteMarkup,
+  inlineReadyEventInviteMarkup,
+  createEventDescriptionMessage,
+  createAlCrEventDescriptionMessage,
 } from './responses';
 import { User } from 'src/users/models/user.model';
 import { CalendarEventMember } from '../models/event-member.model';
@@ -24,13 +26,24 @@ import {
   getCtxData,
   getNowDateWithTZ,
   getUserName,
+  numUid,
   sendTempChatIdMessage,
+  sendTempMessage,
 } from 'src/libs/common';
 import { EventsMembersRepository } from '../repositories/event-member.repository';
 import { backMarkup, getDayDate, sendMessage } from 'src/general';
 import { BasicNotificationRepository } from 'src/notifications/repositories/basic-notification.repository';
 import { Waiter } from 'src/listeners/models/waiter.model';
 import { MenuService } from 'src/menu/menu.service';
+import {
+  filterEventsByDate,
+  filterMultyEvents,
+  parseEventDataFromRequest,
+} from './assets';
+import { v4 as uuid } from 'uuid';
+import { Op } from 'sequelize';
+import { CalendarEvent } from '../models/event.model';
+import { getDateFromDataVal, getFreeIntervals } from '../assets';
 
 @Injectable()
 export class ShareEventsService {
@@ -163,14 +176,30 @@ export class ShareEventsService {
 
     const event = await this.eventsRepository.findByPk(eventId);
 
-    // проверять не занято ли это время !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
     const isAleradyEventMember = await this.eventsMembersRepository.findOne({
       where: {
         calendarEventId: eventId,
         userTelegramId: userTgId,
       },
     });
+
+    if (!isAleradyEventMember) {
+      const isTimeBusy = await this.checkIsTimeBusy({
+        startTime: event.startTime,
+        endTime: event.endTime,
+        userTgId,
+      });
+
+      if (isTimeBusy) {
+        return await sendTempMessage({
+          bot: this.bot,
+          ctx,
+          text: '🚫 Это время у вас уже занято',
+          time: 5000,
+          isDeleteInitMess: false,
+        });
+      }
+    }
 
     if (!isAleradyEventMember) {
       await this.eventsMembersRepository.create({
@@ -255,11 +284,7 @@ export class ShareEventsService {
     });
 
     if (isUserActivated) {
-      return sendMessage(alreadyActiveInviteMessage(), {
-        ctx,
-        reply_markup: backMarkup,
-        type: 'send',
-      });
+      return this.eventsService.sendEvent(ctx, eventId);
     }
 
     const event = await this.eventsRepository.findByPk(eventId, {
@@ -279,15 +304,115 @@ export class ShareEventsService {
 
     const query = ctx?.inlineQuery?.query;
 
-    // сразу проверять не занято ли время
+    const user = await this.usersRepository.findByTgId(ctxUser.id);
 
-    if (!query || query.trim() === '') {
+    const { startTime, endTime, eventTitle } = parseEventDataFromRequest(
+      query,
+      user.timezone,
+    );
+
+    const emptyResponse: any = [
+      {
+        type: 'article',
+        thumbnail_url:
+          'https://res.cloudinary.com/dnur7812w/image/upload/v1732562790/iuqgg3w2vmwcxuchk5sj.jpg',
+        id: '1',
+        title: 'Введите название события и время',
+        description: 'Уборка завтра с 18 до 19',
+        input_message_content: {
+          message_text: writeInlineRequestTemplate(),
+          parse_mode: 'HTML',
+          disable_web_page_preview: true,
+        },
+      },
+    ];
+
+    if (!startTime && !eventTitle) {
+      try {
+        return await ctx.answerInlineQuery(emptyResponse);
+      } catch (e) {}
+    }
+
+    const isTimeBusy = await this.checkIsTimeBusy({
+      startTime,
+      endTime,
+      userTgId: user.telegramId,
+    });
+
+    const results = [];
+
+    const matchedEvents = await this.getMatchedEvents({
+      creatorId: user.id,
+      eventTitle,
+      startTime,
+    });
+
+    if (matchedEvents?.length) {
+      for (let matchedEvent of matchedEvents) {
+        results.push({
+          type: 'article',
+          thumbnail_url:
+            'https://res.cloudinary.com/dnur7812w/image/upload/v1732562545/ckk1ubgev4hsit66vuwj.jpg',
+          id: numUid(20),
+          title: `Создать приглашение${
+            matchedEvent.title ? ` на "${matchedEvent.title}"` : ''
+          }`,
+          description: createAlCrEventDescriptionMessage(
+            {
+              startTime: matchedEvent.startTime,
+              endTime: matchedEvent.endTime,
+            },
+            user.timezone,
+          ),
+          input_message_content: {
+            message_text: inlineEventInviteMessage(matchedEvent.title, user),
+            parse_mode: 'HTML',
+            disable_web_page_preview: true,
+          },
+          reply_markup: inlineReadyEventInviteMarkup({
+            eventId: matchedEvent.id,
+            userId: user.id,
+          }),
+        });
+      }
+    }
+
+    if (startTime && !isTimeBusy) {
+      results.push({
+        type: 'article',
+        thumbnail_url:
+          'https://res.cloudinary.com/dnur7812w/image/upload/v1732562545/larwoev5qfpara3h129d.jpg',
+        id: `create_${numUid(10)}`,
+        title: `Создать событие${eventTitle ? ` "${eventTitle}"` : ''}`,
+        description: createEventDescriptionMessage(
+          { startTime, endTime },
+          user.timezone,
+        ),
+        input_message_content: {
+          message_text: inlineEventInviteMessage(eventTitle, user),
+          parse_mode: 'HTML',
+          disable_web_page_preview: true,
+        },
+        reply_markup: inlineLoadingEventInviteMarkup(),
+      });
+    }
+
+    if (results.length) {
+      try {
+        return await ctx.answerInlineQuery(results);
+      } catch (e) {}
+    }
+
+    if (isTimeBusy) {
       try {
         return await ctx.answerInlineQuery([
           {
             type: 'article',
-            id: '1',
-            title: 'Введите название события и время',
+            thumbnail_url:
+              'https://res.cloudinary.com/dnur7812w/image/upload/v1732570057/tc4d96ietgrundkpt0kj.jpg',
+            id: '2',
+            title: 'Это время у вас уже занято',
+            description: 'Выберите свободное время в своем календаре',
             input_message_content: {
               message_text: writeInlineRequestTemplate(),
               parse_mode: 'HTML',
@@ -298,31 +423,117 @@ export class ShareEventsService {
       } catch (e) {}
     }
 
-    const user = await this.usersRepository.findByTgId(ctxUser.id);
+    if (!startTime) {
+      try {
+        return await ctx.answerInlineQuery(emptyResponse);
+      } catch (e) {}
+    }
+  }
 
-    const event = await this.eventsRepository.findOne({
-      where: {
-        creatorId: user.id,
-      },
-    });
+  private async getMatchedEvents({ creatorId, eventTitle, startTime }) {
+    const whereCondition: any = {
+      creatorId,
+      [Op.or]: [],
+    };
 
-    try {
-      await ctx.answerInlineQuery([
-        {
-          type: 'article',
-          id: '1',
-          title: `Создать событие "${query}" 15 января в 15:00`,
-          input_message_content: {
-            message_text: inlineEventInviteMessage(event, user),
-            parse_mode: 'HTML',
-            disable_web_page_preview: true,
+    if (eventTitle) {
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 2);
+
+      whereCondition[Op.or].push({
+        [Op.and]: [
+          {
+            title: {
+              [Op.like]: `%${eventTitle}%`,
+            },
           },
-          reply_markup: inlineEventInviteMarkup({
-            eventId: event.id,
+          {
+            startTime: {
+              [Op.gte]: yesterday,
+            },
+          },
+        ],
+      });
+    }
+
+    if (startTime) {
+      whereCondition[Op.or].push({
+        startTime,
+      });
+    }
+
+    if (whereCondition[Op.or].length === 0) {
+      delete whereCondition[Op.or];
+    }
+
+    return await this.eventsRepository.findAll({
+      where: whereCondition,
+    });
+  }
+
+  async onInlineSelected(ctx: Context) {
+    const { ctxUser } = getCtxData(ctx);
+
+    const { inline_message_id, query, result_id } = ctx.chosenInlineResult;
+
+    const type = result_id?.split('_')?.[0];
+
+    if (type === 'create' && inline_message_id) {
+      const user = await this.usersRepository.findByTgId(ctxUser?.id);
+
+      const eventData = parseEventDataFromRequest(query, user?.timezone);
+
+      const newEvent = await this.eventsService.createEvent({
+        creatorTgId: ctxUser?.id,
+        title: eventData?.eventTitle,
+        startTime: getNowDateWithTZ({
+          initDate: eventData?.startTime,
+          timezone: user?.timezone,
+        }),
+        endTime: getNowDateWithTZ({
+          initDate: eventData?.endTime,
+          timezone: user?.timezone,
+        }),
+        membersTgIds: [ctxUser?.id],
+      });
+
+      try {
+        await ctx.telegram.editMessageReplyMarkup(
+          undefined,
+          undefined,
+          inline_message_id,
+          inlineReadyEventInviteMarkup({
             userId: user.id,
+            eventId: newEvent.id,
           }),
-        },
-      ]);
-    } catch (e) {}
+        );
+      } catch (e) {}
+    }
+  }
+
+  // СДЕЛАТЬ ЭТУ ФУНКЦИЮ РАБОЧЕЙ!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  private async checkIsTimeBusy({ startTime, endTime, userTgId }) {
+    const stDate = new Date(startTime);
+
+    const dateVal = `${stDate.getDate()}.${stDate.getMonth()}.${stDate.getFullYear()}`;
+
+    const eventsMembers = await this.eventsMembersRepository.findAll({
+      where: {
+        userTelegramId: userTgId,
+      },
+      include: [CalendarEvent],
+    });
+    const events = eventsMembers.map((i) => i.event);
+    const filteredEvents = filterMultyEvents(
+      filterEventsByDate(events, dateVal),
+    );
+    const sortedEvents = filterEventsByDate(filteredEvents, dateVal);
+    const initDate = getDateFromDataVal(dateVal);
+
+    const freeIntervals = getFreeIntervals(initDate, sortedEvents, 0, '23:46');
+
+    console.log(freeIntervals);
+
+    return true;
   }
 }

@@ -76,4 +76,11 @@ export class ShareEventsUpdate {
       this.shareEventsService.onInlineRequest(ctx),
     );
   }
+
+  @On('chosen_inline_result')
+  async onChosenInlineResult(ctx: Context) {
+    await this.middlewares.сhatCommandMiddleware(ctx, (ctx: Context) =>
+      this.shareEventsService.onInlineSelected(ctx),
+    );
+  }
 }

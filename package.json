@@ -27,6 +27,7 @@
     "@nestjs/schedule": "^4.1.1",
     "@nestjs/sequelize": "^10.0.0",
     "cheerio": "^1.0.0",
+    "chrono-node": "^2.7.7",
     "cross-env": "^7.0.3",
     "joi": "^17.11.0",
     "mysql2": "^3.6.3",
