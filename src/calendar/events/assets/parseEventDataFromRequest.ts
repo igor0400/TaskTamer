@@ -1,4 +1,5 @@
 import * as chrono from 'chrono-node';
+import { getNowDateWithTZ } from 'src/libs/common';
 
 export const parseEventDataFromRequest = (
   reqMess: string,
@@ -78,7 +79,7 @@ export const parseEventDataFromRequest = (
       const dayNum = parseInt(day, 10);
       const monthNum = parseInt(month, 10) - 1; // Месяцы в JavaScript от 0 до 11
 
-      const now = new Date();
+      const now = getNowDateWithTZ({ timezone });
       let year = now.getFullYear();
 
       const dateCandidate = new Date(
@@ -99,9 +100,9 @@ export const parseEventDataFromRequest = (
   function removeRelativeDates(text, setDate) {
     const today = getCurrentUTCDate();
     const regexes = [
-      { regex: /\bсегодня\b/gi, date: today },
-      { regex: /\bзавтра\b/gi, date: addUTCdays(today, 1) },
-      { regex: /\bпослезавтра\b/gi, date: addUTCdays(today, 2) },
+      { regex: /\bсегодня\b/gi, date: addUTCdays(today, 1) },
+      { regex: /\bзавтра\b/gi, date: addUTCdays(today, 2) },
+      { regex: /\bпослезавтра\b/gi, date: addUTCdays(today, 3) },
     ];
 
     regexes.forEach(({ regex, date }) => {
@@ -242,7 +243,10 @@ export const parseEventDataFromRequest = (
   }
 
   function getCurrentUTCDate() {
-    const now = new Date();
+    const now = getNowDateWithTZ({ timezone });
+
+    console.log({ now });
+
     return new Date(
       Date.UTC(
         now.getUTCFullYear(),
