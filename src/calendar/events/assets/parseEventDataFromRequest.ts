@@ -150,25 +150,35 @@ export const parseEventDataFromRequest = (
 
   function extractTimeRange(text, setTimeRange, eventDate) {
     const timeRangeRegex =
-      /(?:с\s*)?(\d{1,2})(?::(\d{2}))?(?:\s*(?:до|-|—)\s*(\d{1,2})(?::(\d{2}))?)/i;
+      /(?:с\s*)?(\d{1,2})(?::(\d{2}))?\s*(?:час[аоыв]*)?\s*(утра|вечера|ночи)?(?:\s*(?:до|-|—)\s*(\d{1,2})(?::(\d{2}))?\s*(?:час[аоыв]*)?\s*(утра|вечера|ночи)?)/i;
     const match = text.match(timeRangeRegex);
     if (match) {
-      // Удаляем найденный текст из сообщения
       text = text.replace(match[0], '').trim();
 
-      let [fullMatch, startHour, startMinute, endHour, endMinute] = match;
+      let [
+        fullMatch,
+        startHour,
+        startMinute,
+        startPeriod,
+        endHour,
+        endMinute,
+        endPeriod,
+      ] = match;
+
       startMinute = startMinute || '00';
       endMinute = endMinute || '00';
 
-      const baseDate = eventDate || getCurrentUTCDate();
-
-      // Parse hours and minutes as numbers
-      const startHourNum = parseInt(startHour, 10);
+      // Преобразование времени с учётом периодов
+      const startHourNum = adjustHourByPeriod(
+        parseInt(startHour, 10),
+        startPeriod,
+      );
       const startMinuteNum = parseInt(startMinute, 10);
-      const endHourNum = parseInt(endHour, 10);
+      const endHourNum = adjustHourByPeriod(parseInt(endHour, 10), endPeriod);
       const endMinuteNum = parseInt(endMinute, 10);
 
-      // Adjust hours for user timezone
+      const baseDate = eventDate || getCurrentUTCDate();
+
       const startTime = createDateInUTCFromUserTime(
         baseDate,
         startHourNum,
@@ -189,21 +199,19 @@ export const parseEventDataFromRequest = (
   }
 
   function extractSingleTime(text, setTime, eventDate) {
-    // Регулярное выражение для поиска времени без обязательного "в"
-    const atTimeRegex = /(?:^|\s)(?:в\s*)?(\d{1,2})(?::(\d{2}))?(?=\s|$)/i;
+    const atTimeRegex =
+      /(?:^|\s)(?:в\s*)?(\d{1,2})(?::(\d{2}))?\s*(?:час[аоыв]*)?\s*(утра|вечера|ночи)?(?=\s|$)/i;
     const match = atTimeRegex.exec(text);
     if (match) {
-      // Удаляем найденный текст из сообщения
       text = text.replace(match[0], '').trim();
 
-      let [fullMatch, hour, minute] = match;
+      let [fullMatch, hour, minute, period] = match;
       minute = minute || '00';
 
-      const baseDate = eventDate || getCurrentUTCDate();
-
-      // Преобразуем часы и минуты в числа
-      const hourNum = parseInt(hour, 10);
+      const hourNum = adjustHourByPeriod(parseInt(hour, 10), period);
       const minuteNum = parseInt(minute, 10);
+
+      const baseDate = eventDate || getCurrentUTCDate();
 
       const time = createDateInUTCFromUserTime(
         baseDate,
@@ -215,6 +223,17 @@ export const parseEventDataFromRequest = (
       setTime(time);
     }
     return text;
+  }
+
+  function adjustHourByPeriod(hour, period) {
+    if (!period) return hour; // Если период не указан, оставляем как есть
+    if (period.toLowerCase().includes('вечера') && hour < 12) {
+      return hour + 12; // Преобразуем PM-время
+    }
+    if (period.toLowerCase().includes('ночи')) {
+      return hour < 6 ? hour : hour + 12; // Ночь может быть до 6 утра
+    }
+    return hour; // Для "утра" ничего не меняем
   }
 
   function createDateInUTCFromUserTime(
@@ -244,8 +263,6 @@ export const parseEventDataFromRequest = (
 
   function getCurrentUTCDate() {
     const now = getNowDateWithTZ({ timezone });
-
-    console.log({ now });
 
     return new Date(
       Date.UTC(
