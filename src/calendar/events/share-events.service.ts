@@ -329,7 +329,10 @@ export class ShareEventsService {
 
     if (!startTime && !eventTitle) {
       try {
-        return await ctx.answerInlineQuery(emptyResponse);
+        return await ctx.answerInlineQuery(emptyResponse, {
+          is_personal: true,
+          cache_time: 60,
+        });
       } catch (e) {}
     }
 
@@ -399,33 +402,45 @@ export class ShareEventsService {
 
     if (results.length) {
       try {
-        return await ctx.answerInlineQuery(results);
+        return await ctx.answerInlineQuery(results, {
+          is_personal: true,
+          cache_time: 60,
+        });
       } catch (e) {}
     }
 
     if (isTimeBusy) {
       try {
-        return await ctx.answerInlineQuery([
-          {
-            type: 'article',
-            thumbnail_url:
-              'https://res.cloudinary.com/dnur7812w/image/upload/v1732570057/tc4d96ietgrundkpt0kj.jpg',
-            id: '2',
-            title: 'Это время у вас уже занято',
-            description: 'Выберите свободное время в своем календаре',
-            input_message_content: {
-              message_text: writeInlineRequestTemplate(),
-              parse_mode: 'HTML',
-              disable_web_page_preview: true,
+        return await ctx.answerInlineQuery(
+          [
+            {
+              type: 'article',
+              thumbnail_url:
+                'https://res.cloudinary.com/dnur7812w/image/upload/v1732570057/tc4d96ietgrundkpt0kj.jpg',
+              id: '2',
+              title: 'Это время у вас уже занято',
+              description: 'Выберите свободное время в своем календаре',
+              input_message_content: {
+                message_text: writeInlineRequestTemplate(),
+                parse_mode: 'HTML',
+                disable_web_page_preview: true,
+              },
             },
+          ],
+          {
+            is_personal: true,
+            cache_time: 60,
           },
-        ]);
+        );
       } catch (e) {}
     }
 
     if (!startTime) {
       try {
-        return await ctx.answerInlineQuery(emptyResponse);
+        return await ctx.answerInlineQuery(emptyResponse, {
+          is_personal: true,
+          cache_time: 60,
+        });
       } catch (e) {}
     }
   }
@@ -511,11 +526,13 @@ export class ShareEventsService {
     }
   }
 
-  // СДЕЛАТЬ ЭТУ ФУНКЦИЮ РАБОЧЕЙ!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   private async checkIsTimeBusy({ startTime, endTime, userTgId }) {
     const stDate = new Date(startTime);
+    const edDate = new Date(endTime);
 
-    const dateVal = `${stDate.getDate()}.${stDate.getMonth()}.${stDate.getFullYear()}`;
+    const dateVal = `${stDate.getDate()}.${
+      stDate.getMonth() + 1
+    }.${stDate.getFullYear()}`;
 
     const eventsMembers = await this.eventsMembersRepository.findAll({
       where: {
@@ -528,12 +545,26 @@ export class ShareEventsService {
       filterEventsByDate(events, dateVal),
     );
     const sortedEvents = filterEventsByDate(filteredEvents, dateVal);
-    const initDate = getDateFromDataVal(dateVal);
 
-    const freeIntervals = getFreeIntervals(initDate, sortedEvents, 0, '23:46');
+    let isBusy = false;
 
-    console.log(freeIntervals);
+    for (let busyEvent of sortedEvents) {
+      const isStartBusy =
+        new Date(busyEvent.startTime) <= stDate &&
+        new Date(busyEvent.endTime) > stDate;
+      const isEndBusy =
+        new Date(busyEvent.startTime) < edDate &&
+        new Date(busyEvent.endTime) >= edDate;
 
-    return true;
+      const isAllMore =
+        new Date(busyEvent.startTime) >= stDate &&
+        new Date(busyEvent.endTime) <= edDate;
+
+      if (isStartBusy || isEndBusy || isAllMore) {
+        isBusy = true;
+      }
+    }
+
+    return isBusy;
   }
 }
