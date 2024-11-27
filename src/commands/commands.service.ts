@@ -133,6 +133,8 @@ export class CommandsService {
         ctx,
       });
 
+      await loading.stopAndDelete();
+
       if (isDateOrMonth) return;
 
       return sendMessage(helpCommandsMessage(), {
@@ -252,8 +254,8 @@ export class CommandsService {
     }
 
     const chatCommand = initChatCommand
-      ? initChatCommand?.trim()?.toLowerCase()
-      : message.text?.trim()?.toLowerCase();
+      ? initChatCommand?.trim()
+      : message.text?.trim();
 
     const commandsList = this.inlineEventsCommands('ru');
 
@@ -268,7 +270,7 @@ export class CommandsService {
           ?.slice(0, titleLen)
           ?.join(' ');
 
-        if (commandTitle === title) {
+        if (commandTitle?.toLowerCase() === title) {
           const clearArgs = chatCommand
             .replaceAll(new RegExp(title, 'gi'), '')
             ?.trim()
