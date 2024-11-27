@@ -199,7 +199,7 @@ export class NotificationsService {
 
     const sendTime = new Date(event.startTime);
 
-    sendTime.setUTCHours(sendTime.getUTCHours() + Number(addHours));
+    sendTime.setUTCHours(sendTime.getUTCHours() - Number(addHours));
 
     return this.noiseNotificationRepository.create({
       userId: user.id,

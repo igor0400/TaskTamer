@@ -4,6 +4,7 @@ import { GeneralModule } from 'src/general/general.module';
 import { ListenersModule } from './listeners.module';
 import { ChainModule } from 'src/libs/chain/chain.module';
 import { MailingsModule } from 'src/mailings/mailings.module';
+import { CommandsModule } from 'src/commands/commands.module';
 
 @Module({
   imports: [
@@ -11,6 +12,7 @@ import { MailingsModule } from 'src/mailings/mailings.module';
     forwardRef(() => ListenersModule),
     ChainModule,
     MailingsModule,
+    CommandsModule,
   ],
   providers: [ListenersUpdate],
 })

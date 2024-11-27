@@ -5,7 +5,7 @@ export const parseEventDataFromRequest = (
   reqMess: string,
   timezone: string,
 ) => {
-  let textWithoutCommand = reqMess;
+  let textWithoutCommand = reqMess.trim();
 
   const userTimezone = Number(timezone);
 
@@ -69,6 +69,16 @@ export const parseEventDataFromRequest = (
     eventDate = getCurrentUTCDate();
   }
 
+  // Приводим время начала и окончания к правильной дате
+  const adjustedTimes = adjustEventTimes({ eventDate, startTime, endTime });
+
+  return {
+    eventTitle,
+    ...adjustedTimes,
+  };
+
+  // Функции для обработки
+
   function extractDateWithoutYear(text, setDate) {
     const dateRegex = /(\d{1,2})[.\/](\d{1,2})(?=\s|$)/;
     const match = dateRegex.exec(text);
@@ -100,9 +110,9 @@ export const parseEventDataFromRequest = (
   function removeRelativeDates(text, setDate) {
     const today = getCurrentUTCDate();
     const regexes = [
-      { regex: /\bсегодня\b/gi, date: addUTCdays(today, 1) },
-      { regex: /\bзавтра\b/gi, date: addUTCdays(today, 2) },
-      { regex: /\bпослезавтра\b/gi, date: addUTCdays(today, 3) },
+      { regex: /\bсегодня\b/gi, date: today },
+      { regex: /\bзавтра\b/gi, date: addUTCdays(today, 1) },
+      { regex: /\bпослезавтра\b/gi, date: addUTCdays(today, 2) },
     ];
 
     regexes.forEach(({ regex, date }) => {
@@ -151,7 +161,7 @@ export const parseEventDataFromRequest = (
   function extractTimeRange(text, setTimeRange, eventDate) {
     const timeRangeRegex =
       /(?:с\s*)?(\d{1,2})(?::(\d{2}))?\s*(?:час[аоыв]*)?\s*(утра|вечера|ночи)?(?:\s*(?:до|-|—)\s*(\d{1,2})(?::(\d{2}))?\s*(?:час[аоыв]*)?\s*(утра|вечера|ночи)?)/i;
-    const match = text.match(timeRangeRegex);
+    const match = timeRangeRegex.exec(text);
     if (match) {
       text = text.replace(match[0], '').trim();
 
@@ -168,14 +178,31 @@ export const parseEventDataFromRequest = (
       startMinute = startMinute || '00';
       endMinute = endMinute || '00';
 
+      // Преобразуем минуты в числа
+      let startMinuteNum = parseInt(startMinute, 10);
+      let endMinuteNum = parseInt(endMinute, 10);
+
+      // Округляем минуты до ближайших 5 минут вверх
+      startMinuteNum = roundMinutesUpToNearestFive(startMinuteNum);
+      endMinuteNum = roundMinutesUpToNearestFive(endMinuteNum);
+
+      // Если минуты >= 60, увеличиваем час на 1 и устанавливаем минуты в 0
+      let startHourNum = parseInt(startHour, 10);
+      let endHourNum = parseInt(endHour, 10);
+
+      if (startMinuteNum >= 60) {
+        startMinuteNum = 0;
+        startHourNum += 1;
+      }
+
+      if (endMinuteNum >= 60) {
+        endMinuteNum = 0;
+        endHourNum += 1;
+      }
+
       // Преобразование времени с учётом периодов
-      const startHourNum = adjustHourByPeriod(
-        parseInt(startHour, 10),
-        startPeriod,
-      );
-      const startMinuteNum = parseInt(startMinute, 10);
-      const endHourNum = adjustHourByPeriod(parseInt(endHour, 10), endPeriod);
-      const endMinuteNum = parseInt(endMinute, 10);
+      startHourNum = adjustHourByPeriod(startHourNum, startPeriod);
+      endHourNum = adjustHourByPeriod(endHourNum, endPeriod);
 
       const baseDate = eventDate || getCurrentUTCDate();
 
@@ -208,8 +235,19 @@ export const parseEventDataFromRequest = (
       let [fullMatch, hour, minute, period] = match;
       minute = minute || '00';
 
-      const hourNum = adjustHourByPeriod(parseInt(hour, 10), period);
-      const minuteNum = parseInt(minute, 10);
+      // Преобразуем минуты в число и округляем
+      let minuteNum = parseInt(minute, 10);
+      minuteNum = roundMinutesUpToNearestFive(minuteNum);
+
+      // Если минуты >= 60, увеличиваем час на 1 и устанавливаем минуты в 0
+      let hourNum = parseInt(hour, 10);
+      if (minuteNum >= 60) {
+        minuteNum = 0;
+        hourNum += 1;
+      }
+
+      // Преобразование времени с учётом периодов
+      hourNum = adjustHourByPeriod(hourNum, period);
 
       const baseDate = eventDate || getCurrentUTCDate();
 
@@ -223,6 +261,10 @@ export const parseEventDataFromRequest = (
       setTime(time);
     }
     return text;
+  }
+
+  function roundMinutesUpToNearestFive(minutes) {
+    return minutes % 5 === 0 ? minutes : minutes + (5 - (minutes % 5));
   }
 
   function adjustHourByPeriod(hour, period) {
@@ -243,32 +285,46 @@ export const parseEventDataFromRequest = (
     userTimezoneOffset,
   ) {
     // Корректируем часы, вычитая смещение часового пояса пользователя
-    const utcHours = hours - userTimezoneOffset;
+    let utcHours = hours - userTimezoneOffset;
 
-    // Создаем новую дату в UTC
-    const dateTime = new Date(
+    const date = new Date(
       Date.UTC(
         baseDate.getUTCFullYear(),
         baseDate.getUTCMonth(),
         baseDate.getUTCDate(),
-        utcHours,
-        minutes,
+        0,
+        0,
         0,
         0,
       ),
     );
 
-    return dateTime;
+    if (utcHours < 0) {
+      date.setUTCDate(date.getUTCDate() - 1);
+      utcHours += 24;
+    } else if (utcHours >= 24) {
+      date.setUTCDate(date.getUTCDate() + 1);
+      utcHours -= 24;
+    }
+
+    date.setUTCHours(utcHours, minutes, 0, 0);
+
+    return date;
   }
 
   function getCurrentUTCDate() {
-    const now = getNowDateWithTZ({ timezone });
+    const now = new Date();
+    // Смещение часового пояса пользователя в миллисекундах
+    const userOffsetInMs = userTimezone * 60 * 60 * 1000;
+    // Текущее время в часовом поясе пользователя
+    const userNow = new Date(now.getTime() + userOffsetInMs);
 
+    // Возвращаем дату в UTC с учетом даты пользователя
     return new Date(
       Date.UTC(
-        now.getUTCFullYear(),
-        now.getUTCMonth(),
-        now.getUTCDate(),
+        userNow.getUTCFullYear(),
+        userNow.getUTCMonth(),
+        userNow.getUTCDate(),
         0,
         0,
         0,
@@ -297,12 +353,10 @@ export const parseEventDataFromRequest = (
     );
   }
 
-  function adjustEventTimes(event) {
-    const { eventDate, startTime, endTime } = event;
-
+  function adjustEventTimes({ eventDate, startTime, endTime }) {
     if (!eventDate || !startTime) return {};
 
-    // Создаем новый startTime с датой из eventDate и временем из startTime
+    // Приводим startTime к дате события
     const adjustedStartTime = new Date(
       Date.UTC(
         eventDate.getUTCFullYear(),
@@ -310,15 +364,15 @@ export const parseEventDataFromRequest = (
         eventDate.getUTCDate(),
         startTime.getUTCHours(),
         startTime.getUTCMinutes(),
-        startTime.getUTCSeconds(),
-        startTime.getUTCMilliseconds(),
+        0,
+        0,
       ),
     );
 
-    let adjustedEndTime: Date;
+    let adjustedEndTime;
 
     if (endTime) {
-      // Создаем новый endTime с датой из eventDate и временем из endTime
+      // Приводим endTime к дате события
       adjustedEndTime = new Date(
         Date.UTC(
           eventDate.getUTCFullYear(),
@@ -326,25 +380,71 @@ export const parseEventDataFromRequest = (
           eventDate.getUTCDate(),
           endTime.getUTCHours(),
           endTime.getUTCMinutes(),
-          endTime.getUTCSeconds(),
-          endTime.getUTCMilliseconds(),
+          0,
+          0,
         ),
       );
+
+      // Если время окончания меньше или равно времени начала, или переходит на следующий день
+      if (
+        adjustedEndTime <= adjustedStartTime ||
+        adjustedEndTime.getUTCDate() !== adjustedStartTime.getUTCDate()
+      ) {
+        adjustedEndTime = getUserTimezoneAdjustedEndOfDay(
+          eventDate,
+          userTimezone,
+        );
+      }
+
+      // Если время окончания позже 23:55 в часовом поясе пользователя, устанавливаем его на 23:55 в часовом поясе пользователя
+      const endOfDay = getUserTimezoneAdjustedEndOfDay(eventDate, userTimezone);
+
+      if (adjustedEndTime > endOfDay) {
+        adjustedEndTime = endOfDay;
+      }
     } else {
-      // Если endTime не задан, устанавливаем его на час позже adjustedStartTime
-      adjustedEndTime = new Date(
-        adjustedStartTime.getTime() + 1 * 60 * 60 * 1000,
-      );
+      // Если время окончания не задано, устанавливаем его на час позже времени начала, но не позже 23:55 в часовом поясе пользователя
+      adjustedEndTime = new Date(adjustedStartTime.getTime() + 60 * 60 * 1000);
+      const endOfDay = getUserTimezoneAdjustedEndOfDay(eventDate, userTimezone);
+
+      if (adjustedEndTime > endOfDay) {
+        adjustedEndTime = endOfDay;
+      }
     }
 
-    return {
-      startTime: adjustedStartTime,
-      endTime: adjustedEndTime,
-    };
+    return { startTime: adjustedStartTime, endTime: adjustedEndTime };
   }
 
-  return {
-    eventTitle,
-    ...adjustEventTimes({ eventDate, startTime, endTime }),
-  };
+  function getUserTimezoneAdjustedEndOfDay(eventDate, userTimezone) {
+    // 23:55 в часовом поясе пользователя
+    const userEndHours = 23;
+    const userEndMinutes = 55;
+
+    // Конвертируем локальное время пользователя в UTC
+    let utcHours = userEndHours - userTimezone;
+    let date = new Date(
+      Date.UTC(
+        eventDate.getUTCFullYear(),
+        eventDate.getUTCMonth(),
+        eventDate.getUTCDate(),
+        0,
+        0,
+        0,
+        0,
+      ),
+    );
+
+    // Корректируем дату, если utcHours выходит за пределы 0-23
+    if (utcHours < 0) {
+      utcHours += 24;
+      date.setUTCDate(date.getUTCDate() - 1);
+    } else if (utcHours >= 24) {
+      utcHours -= 24;
+      date.setUTCDate(date.getUTCDate() + 1);
+    }
+
+    date.setUTCHours(utcHours, userEndMinutes, 0, 0);
+
+    return date;
+  }
 };

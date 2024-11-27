@@ -4,6 +4,7 @@ import { Context } from 'telegraf';
 import { GeneralMiddlewares } from 'src/general/general.middlewares';
 import { ChainService } from 'src/libs/chain/chain.service';
 import { MailingsService } from 'src/mailings/mailings.service';
+import { CommandsService } from 'src/commands/commands.service';
 
 @Update()
 export class ListenersUpdate {
@@ -12,6 +13,7 @@ export class ListenersUpdate {
     private readonly listenersService: ListenersService,
     private readonly chainService: ChainService,
     private readonly mailingsService: MailingsService,
+    private readonly commandsService: CommandsService,
   ) {}
 
   @On('text')
@@ -20,6 +22,7 @@ export class ListenersUpdate {
       this.listenersService.onTextMessage(ctx);
       this.chainService.onTextMessage(ctx);
       this.mailingsService.onTextMessage(ctx);
+      this.commandsService.onTextMessage(ctx);
     });
   }
 
@@ -47,9 +50,10 @@ export class ListenersUpdate {
 
   @On('voice')
   async onVoice(@Ctx() ctx: Context) {
-    await this.middlewares.listenerMiddleware(ctx, (ctx: Context) =>
-      this.mailingsService.onVoiceMessage(ctx),
-    );
+    await this.middlewares.listenerMiddleware(ctx, (ctx: Context) => {
+      this.mailingsService.onVoiceMessage(ctx);
+      this.commandsService.onVoiceMessage(ctx);
+    });
   }
 
   @On('video')

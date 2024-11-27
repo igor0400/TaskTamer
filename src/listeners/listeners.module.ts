@@ -9,6 +9,7 @@ import { ProfileModule } from 'src/profile/profile.module';
 import { MailingsModule } from 'src/mailings/mailings.module';
 import { ChainModule } from 'src/libs/chain/chain.module';
 import { CalendarModule } from 'src/calendar/calendar.module';
+import { CommandsModule } from 'src/commands/commands.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { CalendarModule } from 'src/calendar/calendar.module';
     MailingsModule,
     ChainModule,
     CalendarModule,
+    forwardRef(() => CommandsModule),
   ],
   providers: [ListenersService, WaitersRepository],
   exports: [WaitersRepository, ListenersService],

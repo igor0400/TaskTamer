@@ -526,7 +526,7 @@ export class ShareEventsService {
     }
   }
 
-  private async checkIsTimeBusy({ startTime, endTime, userTgId }) {
+  async checkIsTimeBusy({ startTime, endTime, userTgId }) {
     const stDate = new Date(startTime);
     const edDate = new Date(endTime);
 

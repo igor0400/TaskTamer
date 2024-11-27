@@ -140,13 +140,13 @@ export class CalendarDaysService {
 
     const sortedEvents = filterEventsByDate(
       eventMembers.map((i) => ({
-        ...i.event.dataValues,
+        ...i?.event?.dataValues,
         startTime: getNowDateWithTZ({
-          initDate: i.event.startTime,
+          initDate: i?.event?.startTime,
           timezone: user.timezone,
         }),
         endTime: getNowDateWithTZ({
-          initDate: i.event.endTime,
+          initDate: i?.event?.endTime,
           timezone: user.timezone,
         }),
       })),
