@@ -414,96 +414,49 @@ export const parseEventDataFromRequest = (
   function adjustEventTimes({ eventDate, startTime, endTime }) {
     if (!eventDate || !startTime) return {};
 
-    // Приводим startTime к дате события
-    const adjustedStartTime = new Date(
-      Date.UTC(
-        eventDate.getUTCFullYear(),
-        eventDate.getUTCMonth(),
-        eventDate.getUTCDate(),
-        startTime.getUTCHours(),
-        startTime.getUTCMinutes(),
-        0,
-        0,
-      ),
+    // Конвертируем startTime и endTime из UTC в локальное время пользователя
+    const localStartTime = new Date(
+      startTime.getTime() + userTimezone * 3600 * 1000,
     );
+    let localEndTime = endTime
+      ? new Date(endTime.getTime() + userTimezone * 3600 * 1000)
+      : null;
 
-    let adjustedEndTime;
+    // Определяем конец дня пользователя (23:55)
+    const localEndOfDay = new Date(localStartTime);
+    localEndOfDay.setUTCHours(23, 55, 0, 0); // Устанавливаем на 23:55
 
-    if (endTime) {
-      // Приводим endTime к дате события
-      adjustedEndTime = new Date(
-        Date.UTC(
-          eventDate.getUTCFullYear(),
-          eventDate.getUTCMonth(),
-          eventDate.getUTCDate(),
-          endTime.getUTCHours(),
-          endTime.getUTCMinutes(),
-          0,
-          0,
-        ),
-      );
-
-      // Если время окончания меньше или равно времени начала, или переходит на следующий день
-      if (
-        adjustedEndTime <= adjustedStartTime ||
-        adjustedEndTime.getUTCDate() !== adjustedStartTime.getUTCDate()
-      ) {
-        adjustedEndTime = getUserTimezoneAdjustedEndOfDay(
-          eventDate,
-          userTimezone,
-        );
-      }
-
-      // Если время окончания позже 23:55 в часовом поясе пользователя, устанавливаем его на 23:55 в часовом поясе пользователя
-      const endOfDay = getUserTimezoneAdjustedEndOfDay(eventDate, userTimezone);
-
-      if (adjustedEndTime > endOfDay) {
-        adjustedEndTime = endOfDay;
+    if (!endTime) {
+      // Если endTime не задан, устанавливаем его на час позже startTime, но не позже 23:55
+      localEndTime = new Date(localStartTime.getTime() + 60 * 60 * 1000);
+      if (localEndTime > localEndOfDay) {
+        localEndTime = new Date(localEndOfDay);
       }
     } else {
-      // Если время окончания не задано, устанавливаем его на час позже времени начала, но не позже 23:55 в часовом поясе пользователя
-      adjustedEndTime = new Date(adjustedStartTime.getTime() + 60 * 60 * 1000);
-      const endOfDay = getUserTimezoneAdjustedEndOfDay(eventDate, userTimezone);
+      // Если endTime задан
+      if (localEndTime <= localStartTime) {
+        // Если endTime раньше или равен startTime, устанавливаем его на 23:55 того же дня
+        localEndTime = new Date(localEndOfDay);
+      }
 
-      if (adjustedEndTime > endOfDay) {
-        adjustedEndTime = endOfDay;
+      if (localEndTime > localEndOfDay) {
+        // Если endTime превышает 23:55, устанавливаем его на 23:55
+        localEndTime = new Date(localEndOfDay);
       }
     }
 
-    return { startTime: adjustedStartTime, endTime: adjustedEndTime };
-  }
-
-  function getUserTimezoneAdjustedEndOfDay(eventDate, userTimezone) {
-    // 23:55 в часовом поясе пользователя
-    const userEndHours = 23;
-    const userEndMinutes = 55;
-
-    // Конвертируем локальное время пользователя в UTC
-    let utcHours = userEndHours - userTimezone;
-    let date = new Date(
-      Date.UTC(
-        eventDate.getUTCFullYear(),
-        eventDate.getUTCMonth(),
-        eventDate.getUTCDate(),
-        0,
-        0,
-        0,
-        0,
-      ),
+    // Конвертируем обратно в UTC
+    const adjustedStartTime = new Date(
+      localStartTime.getTime() - userTimezone * 3600 * 1000,
     );
+    const adjustedEndTime = localEndTime
+      ? new Date(localEndTime.getTime() - userTimezone * 3600 * 1000)
+      : undefined;
 
-    // Корректируем дату, если utcHours выходит за пределы 0-23 часов
-    if (utcHours < 0) {
-      utcHours += 24;
-      date.setUTCDate(date.getUTCDate() - 1);
-    } else if (utcHours >= 24) {
-      utcHours -= 24;
-      date.setUTCDate(date.getUTCDate() + 1);
-    }
-
-    date.setUTCHours(utcHours, userEndMinutes, 0, 0);
-
-    return date;
+    return {
+      startTime: adjustedStartTime,
+      endTime: adjustedEndTime,
+    };
   }
 
   function getCurrentYear() {

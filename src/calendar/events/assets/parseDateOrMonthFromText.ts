@@ -10,32 +10,32 @@ export function parseDateOrMonthFromText(text, timezone) {
   let specificDate = null;
   let monthOffset = null;
 
-  // 1. Поиск конкретных дат в формате "5 января", "5 января 2025"
-  const specificDateResult = findSpecificDate(text, userNow);
-  if (specificDateResult) {
-    specificDate = specificDateResult;
-    return { date: formatDate(specificDate) };
-  }
-
-  // 2. Поиск месяцев с годом или без
-  const monthResult = findMonth(text, userNow);
-  if (monthResult !== null) {
-    monthOffset = monthResult;
-    return { monthOffset: monthOffset };
-  }
-
-  // 3. Поиск относительных дат (сегодня, завтра и т.д.)
+  // 1. Поиск относительных дат (сегодня, завтра и т.д.)
   const dateResult = findRelativeDate(text, userNow);
   if (dateResult) {
     specificDate = dateResult;
     return { date: formatDate(specificDate) };
   }
 
-  // 4. Поиск дней недели
+  // 2. Поиск дней недели
   const weekdayResult = findWeekday(text, userNow);
   if (weekdayResult) {
     specificDate = weekdayResult;
     return { date: formatDate(specificDate) };
+  }
+
+  // 3. Поиск конкретных дат в формате "5 января", "5 января 2025"
+  const specificDateResult = findSpecificDate(text, userNow);
+  if (specificDateResult) {
+    specificDate = specificDateResult;
+    return { date: formatDate(specificDate) };
+  }
+
+  // 4. Поиск месяцев с годом или без
+  const monthResult = findMonth(text, userNow);
+  if (monthResult !== null) {
+    monthOffset = monthResult;
+    return { monthOffset: monthOffset };
   }
 
   // Если ничего не найдено, возвращаем пустой объект
@@ -158,17 +158,17 @@ function findMonth(text, userNow) {
 // Функция для поиска относительных дат
 function findRelativeDate(text, userNow) {
   const relativeDates = [
-    { regex: /\bсегодня\b/i, offsetDays: 0 },
-    { regex: /\bзавтра\b/i, offsetDays: 1 },
-    { regex: /\bпослезавтра\b/i, offsetDays: 2 },
-    { regex: /\bвчера\b/i, offsetDays: -1 },
-    { regex: /\bпозавчера\b/i, offsetDays: -2 },
+    { regex: /(^|\s)сегодня(\s|$)/i, offsetDays: 0 },
+    { regex: /(^|\s)завтра(\s|$)/i, offsetDays: 1 },
+    { regex: /(^|\s)послезавтра(\s|$)/i, offsetDays: 2 },
+    { regex: /(^|\s)вчера(\s|$)/i, offsetDays: -1 },
+    { regex: /(^|\s)позавчера(\s|$)/i, offsetDays: -2 },
   ];
 
   for (const { regex, offsetDays } of relativeDates) {
     if (regex.test(text)) {
       const date = new Date(userNow);
-      date.setDate(date.getDate() + offsetDays);
+      date.setUTCDate(date.getUTCDate() + offsetDays);
       return date;
     }
   }
@@ -189,15 +189,18 @@ function findWeekday(text, userNow) {
 
   for (const day of daysOfWeek) {
     const namesPattern = day.names.join('|');
-    const regex = new RegExp(`\\b(?:в\\s*)?(?:${namesPattern})\\b`, 'i');
+    const regex = new RegExp(
+      `(^|\\s)(?:в\\s*)?(?:${namesPattern})(?=\\s|$)`,
+      'i',
+    );
     if (regex.test(text)) {
-      const todayDayIndex = userNow.getDay(); // 0 (воскресенье) до 6 (суббота)
+      const todayDayIndex = userNow.getUTCDay(); // 0 (воскресенье) до 6 (суббота)
       let daysToAdd = (day.index - todayDayIndex + 7) % 7;
       if (daysToAdd === 0) {
         daysToAdd = 7; // Возвращаем следующий указанный день недели
       }
       const date = new Date(userNow);
-      date.setDate(userNow.getDate() + daysToAdd);
+      date.setUTCDate(userNow.getUTCDate() + daysToAdd);
       return date;
     }
   }
@@ -206,8 +209,8 @@ function findWeekday(text, userNow) {
 
 // Функция для форматирования даты
 function formatDate(date) {
-  const day = ('0' + date.getDate()).slice(-2);
-  const month = ('0' + (date.getMonth() + 1)).slice(-2);
-  const year = date.getFullYear();
+  const day = ('0' + date.getUTCDate()).slice(-2);
+  const month = ('0' + (date.getUTCMonth() + 1)).slice(-2);
+  const year = date.getUTCFullYear();
   return `${day}.${month}.${year}`;
 }
