@@ -527,45 +527,26 @@ export class ShareEventsService {
     }
   }
 
+  // переделать все ебучие проверки с eventsMembersRepository.findAll так же как тут!!!!!!!!!!!!!!
+
   async checkIsTimeBusy({ startTime, endTime, userTgId }) {
     const stDate = new Date(startTime);
     const edDate = new Date(endTime);
 
-    const dateVal = `${getZero(stDate.getDate())}.${getZero(
-      stDate.getMonth() + 1,
-    )}.${stDate.getFullYear()}`;
-
-    const eventsMembers = await this.eventsMembersRepository.findAll({
+    const overlappingEvent = await this.eventsMembersRepository.findOne({
       where: {
         userTelegramId: userTgId,
+        '$event.endTime$': { [Op.gt]: stDate },
+        '$event.startTime$': { [Op.lt]: edDate },
       },
-      include: [CalendarEvent],
+      include: [
+        {
+          model: CalendarEvent,
+          as: 'event',
+        },
+      ],
     });
-    const events = eventsMembers.map((i) => i.event);
-    const filteredEvents = filterMultyEvents(
-      filterEventsByDate(events, dateVal),
-    );
-    const sortedEvents = filterEventsByDate(filteredEvents, dateVal);
 
-    let isBusy = false;
-
-    for (let busyEvent of sortedEvents) {
-      const isStartBusy =
-        new Date(busyEvent.startTime) <= stDate &&
-        new Date(busyEvent.endTime) > stDate;
-      const isEndBusy =
-        new Date(busyEvent.startTime) < edDate &&
-        new Date(busyEvent.endTime) >= edDate;
-
-      const isAllMore =
-        new Date(busyEvent.startTime) >= stDate &&
-        new Date(busyEvent.endTime) <= edDate;
-
-      if (isStartBusy || isEndBusy || isAllMore) {
-        isBusy = true;
-      }
-    }
-
-    return isBusy;
+    return Boolean(overlappingEvent);
   }
 }
