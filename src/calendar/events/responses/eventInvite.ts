@@ -14,11 +14,11 @@ export const eventInviteMessage = (
     user.timezone,
   );
 
+  const strTitle = title ? ` <b>"${title}"</b>` : '';
+
   return `<b>Приглашение</b>
 
-🗒 ${getUserName(owner)} приглашает вас присоединиться к событию ${
-    title === 'Событие' ? '' : `<b>"${title}"</b>`
-  }
+🗒 ${getUserName(owner)} приглашает вас присоединиться к событию${strTitle}
 
 <b>Дата начала:</b> <code>${textDate}</code>
 <b>Время начала:</b> <code>${textStart}</code>

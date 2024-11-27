@@ -20,8 +20,6 @@ export const getEventTexts = (
     initDate: event.endTime,
   });
 
-  const title = event.title ? event.title : 'без названия';
-
   const dateYear =
     startDate.getUTCFullYear() === new Date().getUTCFullYear()
       ? ''
@@ -42,7 +40,7 @@ export const getEventTexts = (
   }
 
   return {
-    title,
+    title: event.title,
     textDate,
     textStart,
     textEnd,

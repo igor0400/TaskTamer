@@ -11,7 +11,9 @@ export const eventMessage = (event: CalendarEvent, user: User) => {
     user.timezone,
   );
 
-  return `<b>Событие — ${title}</b>
+  const strTitle = title ? ` — ${title}` : '';
+
+  return `<b>Событие${strTitle}</b>
 
 <b>Дата начала:</b> <code>${textDate}</code>
 <b>Время начала:</b> <code>${textStart}</code>

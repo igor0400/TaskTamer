@@ -10,9 +10,11 @@ export const deletedEventMessage = (user: User, event: CalendarEvent) => {
     user?.timezone,
   );
 
+  const strTitle = title ? ` <b>"${title}"</b>` : '';
+
   return `<b>Уведомление</b>
 
-🗑 ${getUserName(user)} удалил событие <b>"${title}"</b>
+🗑 ${getUserName(user)} удалил событие${strTitle} 
 
 <b>Дата начала:</b> <code>${textDate}</code>
 <b>Время начала:</b> <code>${textStart}</code>

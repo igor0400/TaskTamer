@@ -24,6 +24,11 @@ export const parseEventDataFromRequest = (
     eventDate = date;
   });
 
+  // Обработка дат в формате "13 мая", "13 января 2025"
+  textWithoutCommand = extractDatesWithMonth(textWithoutCommand, (date) => {
+    eventDate = date;
+  });
+
   // Обработка даты в формате "15.10"
   textWithoutCommand = extractDateWithoutYear(textWithoutCommand, (date) => {
     eventDate = date;
@@ -79,6 +84,55 @@ export const parseEventDataFromRequest = (
 
   // Функции для обработки
 
+  function extractDatesWithMonth(text, setDate) {
+    const monthNames = [
+      'января',
+      'февраля',
+      'марта',
+      'апреля',
+      'мая',
+      'июня',
+      'июля',
+      'августа',
+      'сентября',
+      'октября',
+      'ноября',
+      'декабря',
+    ];
+
+    const dateRegex = new RegExp(
+      `(\\d{1,2})\\s+(${monthNames.join('|')})(?:\\s+(\\d{4}))?`,
+      'i',
+    );
+
+    const match = dateRegex.exec(text);
+    if (match) {
+      const [fullMatch, day, monthName, year] = match;
+      text = text.replace(fullMatch, '').trim();
+
+      const dayNum = parseInt(day, 10);
+      const monthIndex = monthNames.findIndex(
+        (name) => name.toLowerCase() === monthName.toLowerCase(),
+      );
+
+      let yearNum = year ? parseInt(year, 10) : getCurrentYear();
+
+      const dateCandidate = new Date(
+        Date.UTC(yearNum, monthIndex, dayNum, 0, 0, 0, 0),
+      );
+
+      // Если год не указан и дата уже прошла, берем следующий год
+      const now = getNowDateWithTZ({ timezone });
+      if (!year && dateCandidate < now) {
+        yearNum += 1;
+        dateCandidate.setUTCFullYear(yearNum);
+      }
+
+      setDate(dateCandidate);
+    }
+    return text;
+  }
+
   function extractDateWithoutYear(text, setDate) {
     const dateRegex = /(\d{1,2})[.\/](\d{1,2})(?=\s|$)/;
     const match = dateRegex.exec(text);
@@ -90,7 +144,7 @@ export const parseEventDataFromRequest = (
       const monthNum = parseInt(month, 10) - 1; // Месяцы в JavaScript от 0 до 11
 
       const now = getNowDateWithTZ({ timezone });
-      let year = now.getFullYear();
+      let year = now.getUTCFullYear();
 
       const dateCandidate = new Date(
         Date.UTC(year, monthNum, dayNum, 0, 0, 0, 0),
@@ -127,13 +181,13 @@ export const parseEventDataFromRequest = (
 
   function removeWeekDays(text, setDate) {
     const daysOfWeek = [
-      { names: ['воскресенье', 'воскресенье'], index: 0 },
-      { names: ['понедельник', 'понедельник'], index: 1 },
-      { names: ['вторник', 'вторник'], index: 2 },
-      { names: ['среда', 'среду'], index: 3 },
-      { names: ['четверг', 'четверг'], index: 4 },
-      { names: ['пятница', 'пятницу'], index: 5 },
-      { names: ['суббота', 'субботу'], index: 6 },
+      { names: ['воскресенье'], index: 0 },
+      { names: ['понедельник'], index: 1 },
+      { names: ['вторник'], index: 2 },
+      { names: ['среда'], index: 3 },
+      { names: ['четверг'], index: 4 },
+      { names: ['пятница'], index: 5 },
+      { names: ['суббота'], index: 6 },
     ];
 
     for (const day of daysOfWeek) {
@@ -159,8 +213,14 @@ export const parseEventDataFromRequest = (
   }
 
   function extractTimeRange(text, setTimeRange, eventDate) {
-    const timeRangeRegex =
-      /(?:с\s*)?(\d{1,2})(?::(\d{2}))?\s*(?:час[аоыв]*)?\s*(утра|вечера|ночи)?(?:\s*(?:до|-|—)\s*(\d{1,2})(?::(\d{2}))?\s*(?:час[аоыв]*)?\s*(утра|вечера|ночи)?)/i;
+    const monthNamesPattern =
+      '(?:январ[ья]|феврал[ья]|март[а]?|апрел[ья]|ма[яй]|июн[ья]|июл[ья]|август[а]?|сентябр[ья]|октябр[ья]|ноябр[ья]|декабр[ья])';
+
+    const timeRangeRegex = new RegExp(
+      `(?:[сc]\\s*)?(\\d{1,2})(?::(\\d{2}))?\\s*(?:час[аоыв]*)?\\s*(утра|вечера|ночи)?(?!\\s*${monthNamesPattern})(?:\\s*(?:до|-|—)\\s*(\\d{1,2})(?::(\\d{2}))?\\s*(?:час[аоыв]*)?\\s*(утра|вечера|ночи)?(?!\\s*${monthNamesPattern}))`,
+      'i',
+    );
+
     const match = timeRangeRegex.exec(text);
     if (match) {
       text = text.replace(match[0], '').trim();
@@ -226,8 +286,14 @@ export const parseEventDataFromRequest = (
   }
 
   function extractSingleTime(text, setTime, eventDate) {
-    const atTimeRegex =
-      /(?:^|\s)(?:в\s*)?(\d{1,2})(?::(\d{2}))?\s*(?:час[аоыв]*)?\s*(утра|вечера|ночи)?(?=\s|$)/i;
+    const monthNamesPattern =
+      '(?:январ[ья]|феврал[ья]|март[а]?|апрел[ья]|ма[яй]|июн[ья]|июл[ья]|август[а]?|сентябр[ья]|октябр[ья]|ноябр[ья]|декабр[ья])';
+
+    const atTimeRegex = new RegExp(
+      `(?:^|\\s)(?:[вv]\\s*)?(\\d{1,2})(?::(\\d{2}))?\\s*(?:час[аоыв]*)?\\s*(утра|вечера|ночи)?(?!\\s*${monthNamesPattern})(?=\\s|$)`,
+      'i',
+    );
+
     const match = atTimeRegex.exec(text);
     if (match) {
       text = text.replace(match[0], '').trim();
@@ -322,9 +388,9 @@ export const parseEventDataFromRequest = (
     // Возвращаем дату в UTC с учетом даты пользователя
     return new Date(
       Date.UTC(
-        userNow.getUTCFullYear(),
-        userNow.getUTCMonth(),
-        userNow.getUTCDate(),
+        userNow.getFullYear(),
+        userNow.getMonth(),
+        userNow.getDate(),
         0,
         0,
         0,
@@ -341,15 +407,7 @@ export const parseEventDataFromRequest = (
 
   function toUTCDate(date) {
     return new Date(
-      Date.UTC(
-        date.getUTCFullYear(),
-        date.getUTCMonth(),
-        date.getUTCDate(),
-        0,
-        0,
-        0,
-        0,
-      ),
+      Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0, 0),
     );
   }
 
@@ -434,7 +492,7 @@ export const parseEventDataFromRequest = (
       ),
     );
 
-    // Корректируем дату, если utcHours выходит за пределы 0-23
+    // Корректируем дату, если utcHours выходит за пределы 0-23 часов
     if (utcHours < 0) {
       utcHours += 24;
       date.setUTCDate(date.getUTCDate() - 1);
@@ -446,5 +504,12 @@ export const parseEventDataFromRequest = (
     date.setUTCHours(utcHours, userEndMinutes, 0, 0);
 
     return date;
+  }
+
+  function getCurrentYear() {
+    const now = new Date();
+    const userOffsetInMs = userTimezone * 60 * 60 * 1000;
+    const userNow = new Date(now.getTime() + userOffsetInMs);
+    return userNow.getFullYear();
   }
 };

@@ -64,6 +64,7 @@ import { MenuModule } from 'src/menu/menu.module';
   ],
   exports: [
     CalendarMonthsService,
+    CalendarDaysService,
     EventsService,
     ShareCalendarService,
     ShareEventsService,

@@ -6,7 +6,10 @@ import { WaitersRepository } from 'src/listeners/repositories/waiter.repository'
 import { ChainRepository } from 'src/libs/chain/repositories/chain.repository';
 import { UserRepository } from 'src/users/repositories/user.repository';
 import { getCtxData, getNowDateWithTZ } from 'src/libs/common';
-import { parseEventDataFromRequest } from 'src/calendar/events/assets';
+import {
+  parseDateOrMonthFromText,
+  parseEventDataFromRequest,
+} from 'src/calendar/events/assets';
 import { ShareEventsService } from 'src/calendar/events/share-events.service';
 import { EventsService } from 'src/calendar/events/events.service';
 import { sendMessage } from 'src/general';
@@ -16,6 +19,8 @@ import { EventsRepository } from 'src/calendar/repositories/event.repository';
 import { GeneralPresets } from 'src/general/general.presets';
 import { MailingRepository } from 'src/mailings/repositories/mailing.repository';
 import { MailingTemplateRepository } from 'src/mailings/repositories/mailing-template.repository';
+import { CalendarDaysService } from 'src/calendar/days/days.service';
+import { CalendarMonthsService } from 'src/calendar/months/months.service';
 
 interface CommandsType {
   [key: string]: CommandType;
@@ -33,6 +38,8 @@ export class CommandsService {
     private readonly generalPresets: GeneralPresets,
     private readonly mailingRepository: MailingRepository,
     private readonly mailingTemplateRepository: MailingTemplateRepository,
+    private readonly calendarDaysService: CalendarDaysService,
+    private readonly calendarMonthsService: CalendarMonthsService,
   ) {}
 
   inlineEventsCommands = (lang: string = 'ru'): CommandsType => ({
@@ -59,8 +66,13 @@ export class CommandsService {
     );
 
     if (!startTime) {
-      // парсить чисто дату или месяц если есть то присылать дату или месяц
-      // пример ввода, 22.11, 22.11.2024, январь, январь 2025, 5 января
+      const isDateOrMonth = await this.checkAndReturnDateOrMonth({
+        query,
+        timezone: user.timezone,
+        ctx,
+      });
+
+      if (isDateOrMonth) return;
 
       return sendMessage(helpCommandsMessage(), {
         ctx,
@@ -115,7 +127,13 @@ export class CommandsService {
     );
 
     if (!startTime && !eventTitle) {
-      // проверять на дату или месяц
+      const isDateOrMonth = await this.checkAndReturnDateOrMonth({
+        query,
+        timezone: user.timezone,
+        ctx,
+      });
+
+      if (isDateOrMonth) return;
 
       return sendMessage(helpCommandsMessage(), {
         ctx,
@@ -135,7 +153,13 @@ export class CommandsService {
     if (matchedEvent) {
       await this.eventsService.sendEvent(ctx, matchedEvent.id);
     } else {
-      // проверять на дату или месяц
+      const isDateOrMonth = await this.checkAndReturnDateOrMonth({
+        query,
+        timezone: user.timezone,
+        ctx,
+      });
+
+      if (isDateOrMonth) return;
 
       return sendMessage('🤷‍♂️ <b>Событие не найдено</b>', {
         ctx,
@@ -175,6 +199,24 @@ export class CommandsService {
     return await this.eventsRepository.findOne({
       where: whereCondition,
     });
+  }
+
+  private async checkAndReturnDateOrMonth({ query, timezone, ctx }) {
+    const { monthOffset, date } = parseDateOrMonthFromText(query, timezone);
+
+    if (date) {
+      await this.calendarDaysService.sendCalendarDay(ctx, date);
+
+      return true;
+    }
+
+    if (monthOffset) {
+      await this.calendarMonthsService.sendMonth(ctx, monthOffset);
+
+      return true;
+    }
+
+    return false;
   }
 
   async onTextMessage(ctx: Context, initChatCommand?: string) {
@@ -249,5 +291,3 @@ export class CommandsService {
 }
 
 // сделать команды: удали, напомни
-
-// сделать функцию на парсинг только даты или месяца

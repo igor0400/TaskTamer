@@ -26,6 +26,7 @@ import {
   getCtxData,
   getNowDateWithTZ,
   getUserName,
+  getZero,
   numUid,
   sendTempChatIdMessage,
   sendTempMessage,
@@ -530,9 +531,9 @@ export class ShareEventsService {
     const stDate = new Date(startTime);
     const edDate = new Date(endTime);
 
-    const dateVal = `${stDate.getDate()}.${
-      stDate.getMonth() + 1
-    }.${stDate.getFullYear()}`;
+    const dateVal = `${getZero(stDate.getDate())}.${getZero(
+      stDate.getMonth() + 1,
+    )}.${stDate.getFullYear()}`;
 
     const eventsMembers = await this.eventsMembersRepository.findAll({
       where: {
