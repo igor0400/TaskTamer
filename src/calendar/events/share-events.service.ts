@@ -528,6 +528,7 @@ export class ShareEventsService {
   }
 
   // переделать все ебучие проверки с eventsMembersRepository.findAll так же как тут!!!!!!!!!!!!!!
+  // остальные задачи в commandsService
 
   async checkIsTimeBusy({ startTime, endTime, userTgId }) {
     const stDate = new Date(startTime);
